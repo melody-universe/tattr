@@ -1,7 +1,5 @@
 import { PassThrough } from 'node:stream'
 import { createReadableStreamFromReadable } from '@react-router/node'
-
-import * as Sentry from '@sentry/node'
 import chalk from 'chalk'
 import { isbot } from 'isbot'
 import { renderToPipeableStream } from 'react-dom/server'
@@ -36,10 +34,6 @@ export default async function handleRequest(...args: DocRequestArgs) {
 	responseHeaders.set('fly-app', process.env.FLY_APP_NAME ?? 'unknown')
 	responseHeaders.set('fly-primary-instance', primaryInstance)
 	responseHeaders.set('fly-instance', currentInstance)
-
-	if (process.env.NODE_ENV === 'production' && process.env.SENTRY_DSN) {
-		responseHeaders.append('Document-Policy', 'js-profiling')
-	}
 
 	const callbackName = isbot(request.headers.get('user-agent'))
 		? 'onAllReady'
@@ -108,9 +102,7 @@ export function handleError(
 	}
 	if (error instanceof Error) {
 		console.error(chalk.red(error.stack))
-		void Sentry.captureException(error)
 	} else {
 		console.error(error)
-		Sentry.captureException(error)
 	}
 }

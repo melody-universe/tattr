@@ -1,6 +1,5 @@
 import crypto from 'node:crypto'
 import { createRequestHandler } from '@react-router/express'
-import * as Sentry from '@sentry/node'
 import { ip as ipAddress } from 'address'
 import chalk from 'chalk'
 import closeWithGrace from 'close-with-grace'
@@ -16,11 +15,6 @@ const MODE = process.env.NODE_ENV ?? 'development'
 const IS_PROD = MODE === 'production'
 const IS_DEV = MODE === 'development'
 const ALLOW_INDEXING = process.env.ALLOW_INDEXING !== 'false'
-const SENTRY_ENABLED = IS_PROD && process.env.SENTRY_DSN
-
-if (SENTRY_ENABLED) {
-	void import('./utils/monitoring.js').then(({ init }) => init())
-}
 
 const viteDevServer = IS_PROD
 	? undefined
@@ -119,11 +113,9 @@ app.use(
 			// NOTE: Remove reportOnly when you're ready to enforce this CSP
 			reportOnly: true,
 			directives: {
-				'connect-src': [
-					MODE === 'development' ? 'ws:' : null,
-					process.env.SENTRY_DSN ? '*.sentry.io' : null,
-					"'self'",
-				].filter(Boolean),
+				'connect-src': [MODE === 'development' ? 'ws:' : null, "'self'"].filter(
+					Boolean,
+				),
 				'font-src': ["'self'"],
 				'frame-src': ["'self'"],
 				'img-src': ["'self'", 'data:'],
@@ -290,9 +282,5 @@ closeWithGrace(async ({ err }) => {
 	if (err) {
 		console.error(chalk.red(err))
 		console.error(chalk.red(err.stack))
-		if (SENTRY_ENABLED) {
-			Sentry.captureException(err)
-			await Sentry.flush(500)
-		}
 	}
 })

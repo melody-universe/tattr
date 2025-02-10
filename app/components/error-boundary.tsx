@@ -1,4 +1,3 @@
-import { captureException } from '@sentry/react'
 import { useEffect, type ReactElement } from 'react'
 import {
 	type ErrorResponse,
@@ -36,8 +35,6 @@ export function GeneralErrorBoundary({
 
 	useEffect(() => {
 		if (isResponse) return
-
-		captureException(error)
 	}, [error, isResponse])
 
 	return (
