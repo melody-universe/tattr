@@ -3,7 +3,7 @@ import * as schema from "~/database/schema";
 import type { Route } from "./+types/home";
 import { Welcome } from "../welcome/welcome";
 
-export function meta({}: Route.MetaArgs) {
+export function meta(_: Route.MetaArgs) {
   return [
     { title: "New React Router App" },
     { name: "description", content: "Welcome to React Router!" },
@@ -26,7 +26,7 @@ export async function action({ request, context }: Route.ActionArgs) {
 
   try {
     await context.db.insert(schema.guestBook).values({ name, email });
-  } catch (error) {
+  } catch {
     return { guestBookError: "Error adding to guest book" };
   }
 }

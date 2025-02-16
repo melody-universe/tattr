@@ -1,4 +1,5 @@
 import type { Config } from "drizzle-kit";
+import { env } from "process";
 
 export default {
   out: "./drizzle",
@@ -7,7 +8,17 @@ export default {
   driver: "d1-http",
   dbCredentials: {
     databaseId: "your-database-id",
-    accountId: process.env.CLOUDFLARE_ACCOUNT_ID!,
-    token: process.env.CLOUDFLARE_TOKEN!,
+    accountId: getRequiredEnvironmentVariable("CLOUDFLARE_ACCOUNT_ID"),
+    token: getRequiredEnvironmentVariable("CLOUDFLARE_TOKEN"),
   },
 } satisfies Config;
+
+function getRequiredEnvironmentVariable(name: string) {
+  const value = env[name];
+
+  if (!value) {
+    throw new Error(`Expected environment variable: ${name}`);
+  }
+
+  return value;
+}

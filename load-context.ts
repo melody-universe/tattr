@@ -4,6 +4,8 @@ import type { ExecutionContext } from "@cloudflare/workers-types";
 import type { AppLoadContext } from "react-router";
 
 declare global {
+  // We might need to use this for additional environment vairalbes later.
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
   interface CloudflareEnvironment extends Env {}
 }
 
@@ -17,10 +19,10 @@ declare module "react-router" {
   }
 }
 
-type GetLoadContextArgs = {
+interface GetLoadContextArgs {
   request: Request;
   context: Pick<AppLoadContext, "cloudflare">;
-};
+}
 
 export function getLoadContext({ context }: GetLoadContextArgs) {
   const db = drizzle(context.cloudflare.env.DB, { schema });
