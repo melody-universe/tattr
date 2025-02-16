@@ -1,18 +1,22 @@
 import type { ExecutionContext } from "@cloudflare/workers-types";
 import type { AppLoadContext } from "react-router";
 
-import { drizzle, type DrizzleD1Database } from "drizzle-orm/d1";
+// NOTE: I want to drop the guest book table and don't have any other data to
+// introduce at the moment, but will be adding some soon. Keeping data-related
+// code commented to easily re-add it later.
 
-import * as schema from "./database/schema";
+// import { drizzle, type DrizzleD1Database } from "drizzle-orm/d1";
+
+// import * as schema from "./database/schema";
 
 export function getLoadContext({
   context,
 }: GetLoadContextArgs): AppLoadContext {
-  const db = drizzle(context.cloudflare.env.DB, { schema });
+  // const db = drizzle(context.cloudflare.env.DB, { schema });
 
   return {
     cloudflare: context.cloudflare,
-    db,
+    // db,
   };
 }
 
@@ -30,7 +34,7 @@ declare module "react-router" {
       ctx: Omit<ExecutionContext, "props">;
       env: CloudflareEnvironment;
     };
-    db: DrizzleD1Database<typeof schema>;
+    // db: DrizzleD1Database<typeof schema>;
   }
 }
 

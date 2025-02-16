@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 
-import * as schema from "~/database/schema";
-
+// import * as schema from "~/database/schema";
 import type { Route } from "./+types/home";
 
 import { Welcome } from "../welcome/welcome";
@@ -12,14 +11,17 @@ export default function Home({
 }: Route.ComponentProps): ReactNode {
   return (
     <Welcome
-      guestBook={loaderData.guestBook}
+      guestBook={[]}
       guestBookError={actionData?.guestBookError}
       message={loaderData.message}
     />
   );
 }
 
-export async function action({ context, request }: Route.ActionArgs) {
+export async function action({
+  // context,
+  request,
+}: Route.ActionArgs) {
   const formData = await request.formData();
   let name = formData.get("name");
   let email = formData.get("email");
@@ -34,22 +36,22 @@ export async function action({ context, request }: Route.ActionArgs) {
   }
 
   try {
-    await context.db.insert(schema.guestBook).values({ email, name });
+    // await context.db.insert(schema.guestBook).values({ email, name });
   } catch {
     return { guestBookError: "Error adding to guest book" };
   }
 }
 
-export async function loader({ context }: Route.LoaderArgs) {
-  const guestBook = await context.db.query.guestBook.findMany({
-    columns: {
-      id: true,
-      name: true,
-    },
-  });
+export function loader({ context }: Route.LoaderArgs) {
+  // const guestBook = await context.db.query.guestBook.findMany({
+  //   columns: {
+  //     id: true,
+  //     name: true,
+  //   },
+  // });
 
   return {
-    guestBook,
+    // guestBook,
     message: context.cloudflare.env.VALUE_FROM_CLOUDFLARE,
   };
 }
