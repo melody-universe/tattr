@@ -15,6 +15,13 @@
       "when": 1739739493663,
       "tag": "0001_acoustic_nekra",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1739746190690,
+      "tag": "0002_tricky_black_tarantula",
+      "breakpoints": true
     }
   ]
 }
