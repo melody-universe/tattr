@@ -18,6 +18,8 @@ export default typescriptEslint.config(
         "error",
         { argsIgnorePattern: "^_" },
       ],
+      "perfectionist/sort-exports": ["off"],
+      "perfectionist/sort-modules": ["off"],
       "perfectionist/sort-objects": [
         "error",
         {
