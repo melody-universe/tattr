@@ -6,6 +6,19 @@ import type { Route } from "./+types/home";
 
 import { Welcome } from "../welcome/welcome";
 
+export default function Home({
+  actionData,
+  loaderData,
+}: Route.ComponentProps): ReactNode {
+  return (
+    <Welcome
+      guestBook={loaderData.guestBook}
+      guestBookError={actionData?.guestBookError}
+      message={loaderData.message}
+    />
+  );
+}
+
 export async function action({ context, request }: Route.ActionArgs) {
   const formData = await request.formData();
   let name = formData.get("name");
@@ -25,19 +38,6 @@ export async function action({ context, request }: Route.ActionArgs) {
   } catch {
     return { guestBookError: "Error adding to guest book" };
   }
-}
-
-export default function Home({
-  actionData,
-  loaderData,
-}: Route.ComponentProps): ReactNode {
-  return (
-    <Welcome
-      guestBook={loaderData.guestBook}
-      guestBookError={actionData?.guestBookError}
-      message={loaderData.message}
-    />
-  );
 }
 
 export async function loader({ context }: Route.LoaderArgs) {

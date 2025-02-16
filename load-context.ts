@@ -5,10 +5,20 @@ import { drizzle, type DrizzleD1Database } from "drizzle-orm/d1";
 
 import * as schema from "./database/schema";
 
-declare global {
-  // We might need to use this for additional environment vairalbes later.
-  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-  interface CloudflareEnvironment extends Env {}
+export function getLoadContext({
+  context,
+}: GetLoadContextArgs): AppLoadContext {
+  const db = drizzle(context.cloudflare.env.DB, { schema });
+
+  return {
+    cloudflare: context.cloudflare,
+    db,
+  };
+}
+
+interface GetLoadContextArgs {
+  context: Pick<AppLoadContext, "cloudflare">;
+  request: Request;
 }
 
 declare module "react-router" {
@@ -21,18 +31,8 @@ declare module "react-router" {
   }
 }
 
-interface GetLoadContextArgs {
-  context: Pick<AppLoadContext, "cloudflare">;
-  request: Request;
-}
-
-export function getLoadContext({
-  context,
-}: GetLoadContextArgs): AppLoadContext {
-  const db = drizzle(context.cloudflare.env.DB, { schema });
-
-  return {
-    cloudflare: context.cloudflare,
-    db,
-  };
+declare global {
+  // We might need to use this for additional environment vairalbes later.
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+  interface CloudflareEnvironment extends Env {}
 }
