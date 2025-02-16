@@ -10,6 +10,10 @@ import {
 import type { Route } from "./+types/root";
 
 import "./app.css";
+import {
+  NavigationMenu,
+  NavigationMenuLink,
+} from "./components/navigation-menu";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -21,6 +25,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
+        <NavigationMenu>
+          <NavigationMenuLink to="/">Home</NavigationMenuLink>
+          <NavigationMenuLink to="/maps">Maps</NavigationMenuLink>
+          <NavigationMenuLink to="/tokens">Tokens</NavigationMenuLink>
+        </NavigationMenu>
         {children}
         <ScrollRestoration />
         <Scripts />
