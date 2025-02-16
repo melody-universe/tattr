@@ -3,6 +3,7 @@ import { cloudflareDevProxy } from "@react-router/dev/vite/cloudflare";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
+
 import { getLoadContext } from "./load-context";
 
 export default defineConfig(({ isSsrBuild }) => ({
@@ -13,12 +14,16 @@ export default defineConfig(({ isSsrBuild }) => ({
         }
       : undefined,
   },
+  plugins: [
+    cloudflareDevProxy({
+      getLoadContext,
+    }),
+    tailwindcss(),
+    reactRouter(),
+    tsconfigPaths(),
+  ],
   ssr: {
-    target: "webworker",
     noExternal: true,
-    resolve: {
-      conditions: ["workerd", "browser"],
-    },
     optimizeDeps: {
       include: [
         "react",
@@ -29,13 +34,9 @@ export default defineConfig(({ isSsrBuild }) => ({
         "react-router",
       ],
     },
+    resolve: {
+      conditions: ["workerd", "browser"],
+    },
+    target: "webworker",
   },
-  plugins: [
-    cloudflareDevProxy({
-      getLoadContext,
-    }),
-    tailwindcss(),
-    reactRouter(),
-    tsconfigPaths(),
-  ],
 }));

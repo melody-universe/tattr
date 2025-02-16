@@ -1,16 +1,10 @@
 import * as schema from "~/database/schema";
 
 import type { Route } from "./+types/home";
+
 import { Welcome } from "../welcome/welcome";
 
-export function meta(_: Route.MetaArgs) {
-  return [
-    { title: "New React Router App" },
-    { name: "description", content: "Welcome to React Router!" },
-  ];
-}
-
-export async function action({ request, context }: Route.ActionArgs) {
+export async function action({ context, request }: Route.ActionArgs) {
   const formData = await request.formData();
   let name = formData.get("name");
   let email = formData.get("email");
@@ -25,10 +19,20 @@ export async function action({ request, context }: Route.ActionArgs) {
   }
 
   try {
-    await context.db.insert(schema.guestBook).values({ name, email });
+    await context.db.insert(schema.guestBook).values({ email, name });
   } catch {
     return { guestBookError: "Error adding to guest book" };
   }
+}
+
+export default function Home({ actionData, loaderData }: Route.ComponentProps) {
+  return (
+    <Welcome
+      guestBook={loaderData.guestBook}
+      guestBookError={actionData?.guestBookError}
+      message={loaderData.message}
+    />
+  );
 }
 
 export async function loader({ context }: Route.LoaderArgs) {
@@ -45,12 +49,9 @@ export async function loader({ context }: Route.LoaderArgs) {
   };
 }
 
-export default function Home({ actionData, loaderData }: Route.ComponentProps) {
-  return (
-    <Welcome
-      guestBook={loaderData.guestBook}
-      guestBookError={actionData?.guestBookError}
-      message={loaderData.message}
-    />
-  );
+export function meta(_: Route.MetaArgs) {
+  return [
+    { title: "New React Router App" },
+    { content: "Welcome to React Router!", name: "description" },
+  ];
 }

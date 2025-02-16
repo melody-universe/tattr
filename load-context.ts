@@ -1,7 +1,9 @@
-import { drizzle, type DrizzleD1Database } from "drizzle-orm/d1";
-import * as schema from "./database/schema";
 import type { ExecutionContext } from "@cloudflare/workers-types";
 import type { AppLoadContext } from "react-router";
+
+import { drizzle, type DrizzleD1Database } from "drizzle-orm/d1";
+
+import * as schema from "./database/schema";
 
 declare global {
   // We might need to use this for additional environment vairalbes later.
@@ -12,16 +14,16 @@ declare global {
 declare module "react-router" {
   export interface AppLoadContext {
     cloudflare: {
-      env: CloudflareEnvironment;
       ctx: Omit<ExecutionContext, "props">;
+      env: CloudflareEnvironment;
     };
     db: DrizzleD1Database<typeof schema>;
   }
 }
 
 interface GetLoadContextArgs {
-  request: Request;
   context: Pick<AppLoadContext, "cloudflare">;
+  request: Request;
 }
 
 export function getLoadContext({ context }: GetLoadContextArgs) {

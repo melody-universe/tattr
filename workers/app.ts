@@ -10,8 +10,8 @@ const requestHandler = createRequestHandler(
 export default {
   fetch(request, env, ctx) {
     const loadContext = getLoadContext({
+      context: { cloudflare: { ctx, env } },
       request,
-      context: { cloudflare: { env, ctx } },
     });
     return requestHandler(request, loadContext);
   },
