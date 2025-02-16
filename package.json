@@ -9,6 +9,7 @@
     "db:migrate-production": "dotenv -- drizzle-kit migrate",
     "deploy": "npm run build && wrangler deploy",
     "dev": "react-router dev",
+    "lint": "eslint .",
     "start": "wrangler dev",
     "typecheck": "react-router typegen && tsc -b"
   },
