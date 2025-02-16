@@ -3,11 +3,12 @@ import type { ReactNode } from "react";
 import { Card } from "~/components/card";
 import { PageLayout } from "~/components/page-layout";
 
-export default function Tokens(): ReactNode {
+export function HomePage(): ReactNode {
   return (
     <PageLayout>
       <Card>
-        Upload assets to create tokens that you can print out and crop up.
+        Welcome to Tattr. This is a tool for managing crafts for tabletop
+        role-playing games.
       </Card>
     </PageLayout>
   );

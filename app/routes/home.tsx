@@ -3,19 +3,14 @@ import type { ReactNode } from "react";
 // import * as schema from "~/database/schema";
 import type { Route } from "./+types/home";
 
-import { Welcome } from "../welcome/welcome";
+import { HomePage } from "../home-page/home-page";
 
-export default function Home({
-  actionData,
-  loaderData,
-}: Route.ComponentProps): ReactNode {
-  return (
-    <Welcome
-      guestBook={[]}
-      guestBookError={actionData?.guestBookError}
-      message={loaderData.message}
-    />
-  );
+export default function Home(): ReactNode {
+  // {
+  //   actionData,
+  //   loaderData,
+  // }: Route.ComponentProps
+  return <HomePage />;
 }
 
 export async function action({
