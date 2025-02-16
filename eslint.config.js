@@ -6,7 +6,7 @@ import eslintPluginPrettier from "eslint-plugin-prettier/recommended";
 import typescriptEslint from "typescript-eslint";
 
 export default typescriptEslint.config(
-  { ignores: [".react-router"] },
+  { ignores: [".react-router", "build"] },
   eslint.configs.recommended,
   typescriptEslint.configs.strictTypeChecked,
   typescriptEslint.configs.stylisticTypeChecked,

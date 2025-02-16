@@ -1,5 +1,6 @@
 workers_dev = true
-name = "my-worker"
+account_id = "2bcbef515e72375efa7e408eeb8d183a"
+name = "tattr"
 compatibility_date = "2024-11-18"
 compatibility_flags = ["nodejs_compat"]
 main = "./build/server/index.js"
