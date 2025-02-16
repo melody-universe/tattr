@@ -3,6 +3,7 @@
 import eslint from "@eslint/js";
 import eslintPluginPerfectionist from "eslint-plugin-perfectionist";
 import eslintPluginPrettier from "eslint-plugin-prettier/recommended";
+import eslintPluginReact from "eslint-plugin-react";
 import typescriptEslint from "typescript-eslint";
 
 export default typescriptEslint.config(
@@ -12,6 +13,8 @@ export default typescriptEslint.config(
   typescriptEslint.configs.stylisticTypeChecked,
   eslintPluginPerfectionist.configs["recommended-natural"],
   eslintPluginPrettier,
+  eslintPluginReact.configs.flat.recommended,
+  eslintPluginReact.configs.flat["jsx-runtime"],
   {
     rules: {
       "@typescript-eslint/no-unused-vars": [
@@ -27,6 +30,11 @@ export default typescriptEslint.config(
           groups: ["id", "unknown"],
         },
       ],
+    },
+    settings: {
+      react: {
+        version: "detect",
+      },
     },
   },
   {

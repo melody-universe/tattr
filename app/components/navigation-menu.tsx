@@ -9,7 +9,9 @@ export function NavigationMenu({ children }: NavigationMenuProps) {
       <RadixNavigationMenu.List className="flex justify-center">
         {Array.isArray(children)
           ? children.map((child) => (
-              <RadixNavigationMenu.Item>{child}</RadixNavigationMenu.Item>
+              <RadixNavigationMenu.Item key={child.key}>
+                {child}
+              </RadixNavigationMenu.Item>
             ))
           : children}
       </RadixNavigationMenu.List>
