@@ -12,7 +12,7 @@ export default {
   schema: "./database/schema.ts",
 } satisfies Config;
 
-function getRequiredEnvironmentVariable(name: string) {
+function getRequiredEnvironmentVariable(name: string): string {
   const value = process.env[name];
 
   if (!value) {

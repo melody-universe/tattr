@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 import {
   isRouteErrorResponse,
   Links,
@@ -7,15 +9,16 @@ import {
   ScrollRestoration,
 } from "react-router";
 
+import "./app.css";
+
 import type { Route } from "./+types/root";
 
-import "./app.css";
 import {
   NavigationMenu,
   NavigationMenuLink,
 } from "./components/navigation-menu";
 
-export function Layout({ children }: { children: React.ReactNode }) {
+export function Layout({ children }: { children: React.ReactNode }): ReactNode {
   return (
     <html lang="en">
       <head>
@@ -38,7 +41,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function App() {
+export default function App(): ReactNode {
   return <Outlet />;
 }
 
@@ -55,7 +58,7 @@ export const links: Route.LinksFunction = () => [
   },
 ];
 
-export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+export function ErrorBoundary({ error }: Route.ErrorBoundaryProps): ReactNode {
   let message = "Oops!";
   let details = "An unexpected error occurred.";
   let stack: string | undefined;

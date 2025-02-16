@@ -3,7 +3,7 @@ import type { PropsWithChildren, ReactElement, ReactNode } from "react";
 import { NavigationMenu as RadixNavigationMenu } from "radix-ui";
 import { Link, useLocation } from "react-router";
 
-export function NavigationMenu({ children }: NavigationMenuProps) {
+export function NavigationMenu({ children }: NavigationMenuProps): ReactNode {
   return (
     <RadixNavigationMenu.Root className="flex w-screen justify-center">
       <RadixNavigationMenu.List className="flex justify-center">
@@ -47,4 +47,7 @@ interface NavigationMenuProps {
   children: NavigationMenuItem | NavigationMenuItem[];
 }
 
-type NavigationMenuItem = ReactElement<NavigationMenuLinkProps>;
+type NavigationMenuItem = ReactElement<
+  NavigationMenuLinkProps,
+  typeof NavigationMenuLink
+>;

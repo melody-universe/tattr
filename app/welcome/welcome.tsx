@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 import { Form, useNavigation } from "react-router";
 
 import logoDark from "./logo-dark.svg";
@@ -14,7 +16,7 @@ export function Welcome({
   }[];
   guestBookError?: string;
   message: string;
-}) {
+}): ReactNode {
   const navigation = useNavigation();
 
   return (

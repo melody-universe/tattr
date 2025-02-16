@@ -26,7 +26,9 @@ interface GetLoadContextArgs {
   request: Request;
 }
 
-export function getLoadContext({ context }: GetLoadContextArgs) {
+export function getLoadContext({
+  context,
+}: GetLoadContextArgs): AppLoadContext {
   const db = drizzle(context.cloudflare.env.DB, { schema });
 
   return {

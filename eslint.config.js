@@ -17,6 +17,10 @@ export default typescriptEslint.config(
   eslintPluginReact.configs.flat["jsx-runtime"],
   {
     rules: {
+      "@typescript-eslint/explicit-function-return-type": [
+        "error",
+        { allowedNames: ["action", "loader"] },
+      ],
       "@typescript-eslint/no-unused-vars": [
         "error",
         { argsIgnorePattern: "^_" },

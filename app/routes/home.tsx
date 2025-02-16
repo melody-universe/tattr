@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 import * as schema from "~/database/schema";
 
 import type { Route } from "./+types/home";
@@ -25,7 +27,10 @@ export async function action({ context, request }: Route.ActionArgs) {
   }
 }
 
-export default function Home({ actionData, loaderData }: Route.ComponentProps) {
+export default function Home({
+  actionData,
+  loaderData,
+}: Route.ComponentProps): ReactNode {
   return (
     <Welcome
       guestBook={loaderData.guestBook}
@@ -49,7 +54,7 @@ export async function loader({ context }: Route.LoaderArgs) {
   };
 }
 
-export function meta(_: Route.MetaArgs) {
+export function meta(_: Route.MetaArgs): Route.MetaDescriptors {
   return [
     { title: "New React Router App" },
     { content: "Welcome to React Router!", name: "description" },
