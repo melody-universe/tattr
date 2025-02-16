@@ -43,9 +43,9 @@ export function NavigationMenuLink({
 
 type NavigationMenuLinkProps = PropsWithChildren<{ to: string }>;
 
-interface NavigationMenuProps {
+type NavigationMenuProps = {
   children: NavigationMenuItem | NavigationMenuItem[];
-}
+};
 
 type NavigationMenuItem = ReactElement<
   NavigationMenuLinkProps,

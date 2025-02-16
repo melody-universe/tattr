@@ -17,6 +17,7 @@ export default typescriptEslint.config(
   eslintPluginReact.configs.flat["jsx-runtime"],
   {
     rules: {
+      "@typescript-eslint/consistent-type-definitions": ["error", "type"],
       "@typescript-eslint/explicit-function-return-type": [
         "error",
         { allowedNames: ["action", "loader"] },

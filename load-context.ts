@@ -16,12 +16,15 @@ export function getLoadContext({
   };
 }
 
-interface GetLoadContextArgs {
+type GetLoadContextArgs = {
   context: Pick<AppLoadContext, "cloudflare">;
   request: Request;
-}
+};
 
 declare module "react-router" {
+  // This needs to be an interface in order to merge properties:
+  // https://www.typescriptlang.org/docs/handbook/declaration-merging.html
+  // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
   export interface AppLoadContext {
     cloudflare: {
       ctx: Omit<ExecutionContext, "props">;
@@ -32,7 +35,5 @@ declare module "react-router" {
 }
 
 declare global {
-  // We might need to use this for additional environment vairalbes later.
-  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-  interface CloudflareEnvironment extends Env {}
+  type CloudflareEnvironment = Env;
 }
