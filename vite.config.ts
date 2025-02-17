@@ -32,6 +32,7 @@ export default defineConfig(({ isSsrBuild }) => ({
         "react-dom",
         "react-dom/server",
         "react-router",
+        "silly-password-generator",
       ],
     },
     resolve: {
