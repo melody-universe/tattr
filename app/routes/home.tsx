@@ -1,53 +1,81 @@
 import type { ReactNode } from "react";
 
-// import * as schema from "~/database/schema";
+import { useSubmit } from "react-router";
+
+import { auth } from "~/utils/auth.server";
+import { stringifyError } from "~/utils/stringify-error";
+
 import type { Route } from "./+types/home";
 
 import { HomePage } from "../home-page/home-page";
 
-export default function Home(): ReactNode {
-  // {
-  //   actionData,
-  //   loaderData,
-  // }: Route.ComponentProps
-  return <HomePage />;
+export default function Home({
+  actionData,
+  loaderData,
+}: Route.ComponentProps): ReactNode {
+  const submit = useSubmit();
+
+  return (
+    <HomePage
+      createFirstUser={(params) => {
+        submit(params, { method: "post" }).catch((error: unknown) => {
+          console.error(error);
+        });
+      }}
+      error={actionData?.isSuccess ? undefined : actionData?.error}
+      isNewInstance={loaderData.isNewInstance}
+      password={actionData?.isSuccess ? actionData.password : undefined}
+    />
+  );
 }
 
 export async function action({
-  // context,
+  context,
   request,
-}: Route.ActionArgs) {
+}: Route.ActionArgs): Promise<ActionResult> {
   const formData = await request.formData();
-  let name = formData.get("name");
+  let login = formData.get("login");
   let email = formData.get("email");
-  if (typeof name !== "string" || typeof email !== "string") {
-    return { guestBookError: "Name and email are required" };
+  if (typeof login !== "string" || typeof email !== "string") {
+    return { error: "Email and login are required", isSuccess: false };
   }
 
-  name = name.trim();
+  login = login.trim();
   email = email.trim();
-  if (!name || !email) {
-    return { guestBookError: "Name and email are required" };
+  if (!login || !email) {
+    return { error: "Email and login are required", isSuccess: false };
   }
 
   try {
-    // await context.db.insert(schema.guestBook).values({ email, name });
-  } catch {
-    return { guestBookError: "Error adding to guest book" };
+    if (!(await auth(context).isNewInstance())) {
+      return {
+        error: "A user already exists in this instance.",
+        isSuccess: false,
+      };
+    }
+
+    const result = await auth(context).createUser({ email, login });
+    if (!result.isSuccess) {
+      throw result.error;
+    }
+    return { isSuccess: true, password: result.password };
+  } catch (error: unknown) {
+    return {
+      error: stringifyError(error),
+      isSuccess: false,
+    };
   }
 }
 
-export function loader({ context }: Route.LoaderArgs) {
-  // const guestBook = await context.db.query.guestBook.findMany({
-  //   columns: {
-  //     id: true,
-  //     name: true,
-  //   },
-  // });
+type ActionResult =
+  | { error: string; isSuccess: false }
+  | { isSuccess: true; password: string };
+
+export async function loader({ context }: Route.LoaderArgs) {
+  const isNewInstance = await auth(context).isNewInstance();
 
   return {
-    // guestBook,
-    message: context.cloudflare.env.VALUE_FROM_CLOUDFLARE,
+    isNewInstance,
   };
 }
 
