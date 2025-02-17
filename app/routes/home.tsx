@@ -1,8 +1,14 @@
 import type { ReactNode } from "react";
+import type { AppLoadContext } from "react-router";
 
-import { useSubmit } from "react-router";
+import { redirect, useSubmit } from "react-router";
 
 import { auth } from "~/utils/auth.server";
+import {
+  commitSession,
+  getSession,
+  type Session,
+} from "~/utils/sessions.server";
 import { stringifyError } from "~/utils/stringify-error";
 
 import type { Route } from "./+types/home";
@@ -18,13 +24,27 @@ export default function Home({
   return (
     <HomePage
       createFirstUser={(params) => {
-        submit(params, { method: "post" }).catch((error: unknown) => {
-          console.error(error);
-        });
+        submit({ action: "newInstance", ...params }, { method: "post" }).catch(
+          (error: unknown) => {
+            console.error(error);
+          },
+        );
       }}
       error={actionData?.isSuccess ? undefined : actionData?.error}
+      isLoggedIn={loaderData.isLoggedIn}
       isNewInstance={loaderData.isNewInstance}
-      password={actionData?.isSuccess ? actionData.password : undefined}
+      login={(params) => {
+        submit({ action: "login", ...params }, { method: "post" }).catch(
+          (error: unknown) => {
+            console.error(error);
+          },
+        );
+      }}
+      password={
+        actionData?.isSuccess && actionData.kind === "newInstance"
+          ? actionData.password
+          : undefined
+      }
     />
   );
 }
@@ -32,8 +52,66 @@ export default function Home({
 export async function action({
   context,
   request,
-}: Route.ActionArgs): Promise<ActionResult> {
+}: Route.ActionArgs): Promise<ActionResult | Response> {
+  const session = await getSession(request.headers.get("Cookie"));
   const formData = await request.formData();
+  const action = formData.get("action");
+  if (typeof action !== "string") {
+    return { error: "An unexpected error occurred.", isSuccess: false };
+  }
+
+  switch (action) {
+    case "login": {
+      const loginResult = await login(context, session, formData);
+      if (loginResult.isSuccess) {
+        return redirect("/", {
+          headers: { "Set-Cookie": await commitSession(session) },
+        });
+      } else {
+        return loginResult;
+      }
+    }
+    case "newInstance":
+      return newInstance(context, formData);
+    default:
+      return { error: "An unexpected error occurred", isSuccess: false };
+  }
+}
+
+type ActionResult = ErrorResult | LoginResult | NewInstanceResult;
+
+async function login(
+  context: AppLoadContext,
+  session: Session,
+  formData: FormData,
+): Promise<LoginResult> {
+  const login = formData.get("login");
+  const password = formData.get("password");
+  if (typeof login !== "string" || typeof password !== "string") {
+    return {
+      error: "Please provide a login and password.",
+      isSuccess: false,
+    };
+  }
+
+  const result = await auth(context).verifyCredentials({ login, password });
+  if (!result.isSuccess) {
+    return result;
+  }
+
+  session.set("userId", result.userId);
+
+  return { kind: "login", ...result };
+}
+
+type LoginResult =
+  | ErrorResult
+  | { isSuccess: true; kind: "login"; userId: number };
+
+async function newInstance(
+  context: AppLoadContext,
+  formData: FormData,
+): Promise<NewInstanceResult> {
   let login = formData.get("login");
   let email = formData.get("email");
   if (typeof login !== "string" || typeof email !== "string") {
@@ -58,7 +136,7 @@ export async function action({
     if (!result.isSuccess) {
       throw result.error;
     }
-    return { isSuccess: true, password: result.password };
+    return { kind: "newInstance", isSuccess: true, password: result.password };
   } catch (error: unknown) {
     return {
       error: stringifyError(error),
@@ -67,14 +145,18 @@ export async function action({
   }
 }
 
-type ActionResult =
-  | { error: string; isSuccess: false }
-  | { isSuccess: true; password: string };
+type NewInstanceResult =
+  | ErrorResult
+  | { isSuccess: true; kind: "newInstance"; password: string };
 
-export async function loader({ context }: Route.LoaderArgs) {
+type ErrorResult = { error: unknown; isSuccess: false };
+
+export async function loader({ context, request }: Route.LoaderArgs) {
+  const session = await getSession(request.headers.get("Cookie"));
   const isNewInstance = await auth(context).isNewInstance();
 
   return {
+    isLoggedIn: session.has("userId"),
     isNewInstance,
   };
 }

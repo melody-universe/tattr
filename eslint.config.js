@@ -31,8 +31,11 @@ export default typescriptEslint.config(
       "perfectionist/sort-objects": [
         "error",
         {
-          customGroups: [{ elementNamePattern: "^id$", groupName: "id" }],
-          groups: ["id", "unknown"],
+          customGroups: [
+            { elementNamePattern: "^id$", groupName: "id" },
+            { elementNamePattern: "^kind$", groupName: "kind" },
+          ],
+          groups: ["kind", "id", "unknown"],
         },
       ],
     },

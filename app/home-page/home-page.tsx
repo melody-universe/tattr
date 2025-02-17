@@ -3,11 +3,14 @@ import { type ReactNode, useState } from "react";
 import { Button } from "~/components/button";
 import { Card } from "~/components/card";
 import { PageLayout } from "~/components/page-layout";
+import { PasswordField } from "~/components/password-field";
 import { TextField } from "~/components/text-field";
 
 export function HomePage({
   createFirstUser,
+  isLoggedIn,
   isNewInstance,
+  login,
   password,
 }: HomePageProps): ReactNode {
   return (
@@ -16,11 +19,18 @@ export function HomePage({
         Welcome to Tattr. This is a tool for managing crafts for tabletop
         role-playing games.
       </Card>
-      {(isNewInstance || password) && (
+      {isNewInstance || password ? (
         <NewInstanceSection
           createFirstUser={createFirstUser}
           password={password}
         />
+      ) : isLoggedIn ? (
+        <Card>
+          You are current logged in. Sorry, I lied. You still can&apos;t really
+          do anything.
+        </Card>
+      ) : (
+        <LoginSection login={login} />
       )}
     </PageLayout>
   );
@@ -29,7 +39,9 @@ export function HomePage({
 type HomePageProps = {
   createFirstUser: (params: { email: string; login: string }) => void;
   error?: string;
+  isLoggedIn: boolean;
   isNewInstance: boolean;
+  login: (params: { login: string; password: string }) => void;
   password?: string;
 };
 
@@ -88,3 +100,35 @@ function NewInstanceForm({ createFirstUser }: NewInstanceFormProps): ReactNode {
 }
 
 type NewInstanceFormProps = Pick<HomePageProps, "createFirstUser">;
+
+function LoginSection({ login: loginAction }: LoginSectionProps): ReactNode {
+  const [login, setLogin] = useState("");
+  const [password, setPassword] = useState("");
+
+  return (
+    <form
+      onSubmit={(event) => {
+        loginAction({ login, password });
+        event.preventDefault();
+      }}
+    >
+      <Card>
+        <p>
+          You&apos;re free to play around. But if you want to save anything,
+          you&apos;ll need to login.
+        </p>
+        <TextField onChange={setLogin} placeholder="Login" value={login} />
+        <PasswordField
+          onChange={setPassword}
+          placeholder="Password"
+          value={password}
+        />
+        <Button className="self-end" type="submit">
+          Login
+        </Button>
+      </Card>
+    </form>
+  );
+}
+
+type LoginSectionProps = Pick<HomePageProps, "login">;

@@ -29,6 +29,13 @@
       "when": 1739748251480,
       "tag": "0003_nostalgic_human_torch",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1739774570926,
+      "tag": "0004_giant_shooting_star",
+      "breakpoints": true
     }
   ]
 }
