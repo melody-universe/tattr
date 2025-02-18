@@ -32,6 +32,7 @@ export function Layout({ children }: { children: React.ReactNode }): ReactNode {
           <NavigationMenuLink to="/">Home</NavigationMenuLink>
           <NavigationMenuLink to="/maps">Maps</NavigationMenuLink>
           <NavigationMenuLink to="/tokens">Tokens</NavigationMenuLink>
+          <NavigationMenuLink to="/miscellaneous">Misc.</NavigationMenuLink>
         </NavigationMenu>
         {children}
         <ScrollRestoration />
