@@ -26,6 +26,7 @@ export default defineConfig(({ isSsrBuild }) => ({
     noExternal: true,
     optimizeDeps: {
       include: [
+        "pdf-lib",
         "react",
         "react/jsx-runtime",
         "react/jsx-dev-runtime",
