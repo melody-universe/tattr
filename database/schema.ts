@@ -16,3 +16,12 @@ export const users = sqliteTable(
   },
   (table) => [uniqueIndex("login_idx").on(table.login)],
 );
+
+export const assets = sqliteTable("assets", {
+  id: integer().primaryKey({ autoIncrement: true }),
+  hash: text().notNull(),
+  name: text().notNull(),
+  userId: integer()
+    .notNull()
+    .references(() => users.id),
+});
