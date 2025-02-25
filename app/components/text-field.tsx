@@ -5,9 +5,13 @@ import { Input } from "./input";
 export function TextField({ onChange, ...props }: TextFieldProps): ReactNode {
   return (
     <Input
-      onChange={(event) => {
-        onChange(event.target.value);
-      }}
+      onChange={
+        onChange
+          ? (event): void => {
+              onChange(event.target.value);
+            }
+          : undefined
+      }
       type="text"
       {...props}
     />
@@ -15,5 +19,5 @@ export function TextField({ onChange, ...props }: TextFieldProps): ReactNode {
 }
 
 type TextFieldProps = Omit<ComponentProps<"input">, "onChange" | "type"> & {
-  onChange: (value: string) => void;
+  onChange?: (value: string) => void;
 };
