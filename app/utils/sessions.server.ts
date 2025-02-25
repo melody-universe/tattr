@@ -12,7 +12,7 @@ const { commitSession, destroySession, getSession } =
     cookie: {
       domain: import.meta.env.DEV ? "localhost" : "tattr.melody-universe.com",
       httpOnly: true,
-      maxAge: 60,
+      maxAge: 3600,
       name: "__session",
       path: "/",
       sameSite: "lax",
