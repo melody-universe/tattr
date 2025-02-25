@@ -2,5 +2,6 @@
 
 type Env = {
   DB: D1Database;
+  FILES: R2Bucket;
   VALUE_FROM_CLOUDFLARE: "Hello from Cloudflare";
 };

@@ -14,3 +14,7 @@ binding = "DB"
 database_name = "tattr"
 database_id = "c1edd7fa-93c9-4cf0-99cc-801112ee1eea"
 migrations_dir = "drizzle"
+
+[[r2_buckets]]
+binding = "FILES"
+bucket_name = "tattr"
