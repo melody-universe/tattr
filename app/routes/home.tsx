@@ -5,6 +5,10 @@ import { redirect, useSubmit } from "react-router";
 
 import type { Failable } from "~/utils/types/Failable";
 
+import { Card } from "~/components/card";
+import { PageLayout } from "~/components/page-layout";
+import { Login } from "~/modules/login";
+import { NewInstance } from "~/modules/new-instance";
 import { auth } from "~/utils/auth.server";
 import {
   commitSession,
@@ -15,39 +19,53 @@ import { stringifyError } from "~/utils/stringify-error";
 
 import type { Route } from "./+types/home";
 
-import { HomePage } from "../home-page/home-page";
-
 export default function Home({
   actionData,
   loaderData,
 }: Route.ComponentProps): ReactNode {
   const submit = useSubmit();
 
+  const { isLoggedIn, isNewInstance } = loaderData;
+  const password =
+    actionData?.isSuccess && actionData.kind === "newInstance"
+      ? actionData.password
+      : undefined;
+
   return (
-    <HomePage
-      createFirstUser={(params) => {
-        submit({ action: "newInstance", ...params }, { method: "post" }).catch(
-          (error: unknown) => {
-            console.error(error);
-          },
-        );
-      }}
-      error={actionData?.isSuccess ? undefined : actionData?.error}
-      isLoggedIn={loaderData.isLoggedIn}
-      isNewInstance={loaderData.isNewInstance}
-      login={(params) => {
-        submit({ action: "login", ...params }, { method: "post" }).catch(
-          (error: unknown) => {
-            console.error(error);
-          },
-        );
-      }}
-      password={
-        actionData?.isSuccess && actionData.kind === "newInstance"
-          ? actionData.password
-          : undefined
-      }
-    />
+    <PageLayout>
+      <Card>
+        Welcome to Tattr. This is a tool for managing crafts for tabletop
+        role-playing games.
+      </Card>
+      {isNewInstance || password ? (
+        <NewInstance
+          createFirstUser={(params) => {
+            submit(
+              { action: "newInstance", ...params },
+              { method: "post" },
+            ).catch((error: unknown) => {
+              console.error(error);
+            });
+          }}
+          password={password}
+        />
+      ) : isLoggedIn ? (
+        <Card>
+          You are current logged in. Sorry, I lied. You still can&apos;t really
+          do anything.
+        </Card>
+      ) : (
+        <Login
+          login={(params) => {
+            submit({ action: "login", ...params }, { method: "post" }).catch(
+              (error: unknown) => {
+                console.error(error);
+              },
+            );
+          }}
+        />
+      )}
+    </PageLayout>
   );
 }
 
