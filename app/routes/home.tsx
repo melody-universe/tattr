@@ -3,6 +3,8 @@ import type { AppLoadContext } from "react-router";
 
 import { redirect, useSubmit } from "react-router";
 
+import type { Failable } from "~/utils/types/Failable";
+
 import { auth } from "~/utils/auth.server";
 import {
   commitSession,
@@ -104,9 +106,7 @@ async function login(
   return { kind: "login", ...result };
 }
 
-type LoginResult =
-  | ErrorResult
-  | { isSuccess: true; kind: "login"; userId: number };
+type LoginResult = Failable<{ kind: "login"; userId: number }>;
 
 async function newInstance(
   context: AppLoadContext,
@@ -145,9 +145,7 @@ async function newInstance(
   }
 }
 
-type NewInstanceResult =
-  | ErrorResult
-  | { isSuccess: true; kind: "newInstance"; password: string };
+type NewInstanceResult = Failable<{ kind: "newInstance"; password: string }>;
 
 type ErrorResult = { error: unknown; isSuccess: false };
 

@@ -6,6 +6,8 @@ import { generateSillyPassword } from "silly-password-generator";
 
 import { users } from "~/database/schema";
 
+import type { Failable } from "./types/Failable";
+
 // This function is intended to serve as a closure around the AppLoadContext.
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export function auth(context: AppLoadContext) {
@@ -32,9 +34,7 @@ export function auth(context: AppLoadContext) {
     login: string;
   };
 
-  type CreateUserResponse =
-    | { error: unknown; isSuccess: false }
-    | { isSuccess: true; password: string };
+  type CreateUserResponse = Failable<{ password: string }>;
 
   async function isNewInstance(): Promise<boolean> {
     const result = await context.db
@@ -67,9 +67,7 @@ export function auth(context: AppLoadContext) {
 
   type VerifyCredentialsRequest = { login: string; password: string };
 
-  type VerifyCredentialsResponse =
-    | { error: unknown; isSuccess: false }
-    | { isSuccess: true; userId: number };
+  type VerifyCredentialsResponse = Failable<{ userId: number }>;
 
   return {
     createUser,
