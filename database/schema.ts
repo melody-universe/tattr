@@ -10,11 +10,11 @@ export const users = sqliteTable(
   {
     id: integer().primaryKey({ autoIncrement: true }),
     email: text().notNull().unique(),
-    login: text().notNull().unique(),
     name: text(),
     passwordHash: text().notNull(),
+    username: text().notNull().unique(),
   },
-  (table) => [uniqueIndex("login_idx").on(table.login)],
+  (table) => [uniqueIndex("login_idx").on(table.username)],
 );
 
 export const assets = sqliteTable("assets", {

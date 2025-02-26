@@ -5,14 +5,14 @@ import { Card } from "~/components/card";
 import { PasswordField } from "~/components/password-field";
 import { TextField } from "~/components/text-field";
 
-export function Login({ login: loginAction }: LoginProps): ReactNode {
-  const [login, setLogin] = useState("");
+export function Login({ login }: LoginProps): ReactNode {
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
   return (
     <form
       onSubmit={(event) => {
-        loginAction({ login, password });
+        login({ password, username });
         event.preventDefault();
       }}
     >
@@ -21,7 +21,11 @@ export function Login({ login: loginAction }: LoginProps): ReactNode {
           You&apos;re free to play around. But if you want to save anything,
           you&apos;ll need to login.
         </p>
-        <TextField onChange={setLogin} placeholder="Login" value={login} />
+        <TextField
+          onChange={setUsername}
+          placeholder="Username"
+          value={username}
+        />
         <PasswordField
           onChange={setPassword}
           placeholder="Password"
@@ -36,5 +40,5 @@ export function Login({ login: loginAction }: LoginProps): ReactNode {
 }
 
 export type LoginProps = {
-  login: (params: { login: string; password: string }) => void;
+  login: (params: { password: string; username: string }) => void;
 };

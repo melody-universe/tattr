@@ -13,14 +13,14 @@ import type { Failable } from "./types/Failable";
 export function auth(context: AppLoadContext) {
   async function createUser({
     email,
-    login,
+    username,
   }: CreateUserRequest): Promise<CreateUserResponse> {
     const password = generateSillyPassword();
     try {
       await context.db.insert(users).values({
         email,
-        login,
         passwordHash: await bcrypt.hash(password, 10),
+        username,
       });
 
       return { isSuccess: true, password };
@@ -31,7 +31,7 @@ export function auth(context: AppLoadContext) {
 
   type CreateUserRequest = {
     email: string;
-    login: string;
+    username: string;
   };
 
   type CreateUserResponse = Failable<{ password: string }>;
@@ -45,13 +45,13 @@ export function auth(context: AppLoadContext) {
   }
 
   async function verifyCredentials({
-    login,
     password,
+    username,
   }: VerifyCredentialsRequest): Promise<VerifyCredentialsResponse> {
     const result = await context.db
       .select({ id: users.id, passwordHash: users.passwordHash })
       .from(users)
-      .where(eq(users.login, login));
+      .where(eq(users.username, username));
 
     if (result.length === 0) {
       return { error: "Invalid username or password.", isSuccess: false };
@@ -65,7 +65,7 @@ export function auth(context: AppLoadContext) {
     return { isSuccess: true, userId: id };
   }
 
-  type VerifyCredentialsRequest = { login: string; password: string };
+  type VerifyCredentialsRequest = { password: string; username: string };
 
   type VerifyCredentialsResponse = Failable<{ userId: number }>;
 

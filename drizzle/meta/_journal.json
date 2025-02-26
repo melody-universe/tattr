@@ -43,6 +43,13 @@
       "when": 1740453696458,
       "tag": "0005_dapper_johnny_storm",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1740545657003,
+      "tag": "0006_glossy_cable",
+      "breakpoints": true
     }
   ]
 }

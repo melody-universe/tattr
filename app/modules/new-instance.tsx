@@ -1,22 +1,19 @@
-import { zodResolver } from "@hookform/resolvers/zod";
-import { type ReactNode } from "react";
-import { useForm } from "react-hook-form";
+import { Form } from "radix-ui";
+import { type Dispatch, type ReactNode, useState } from "react";
 import { z } from "zod";
 
 import { Button } from "~/components/button";
 import { Card } from "~/components/card";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-} from "~/components/form";
+import { EmailField } from "~/components/email-field";
 import { TextField } from "~/components/text-field";
 
+export function useNewInstanceFormValues(): [FormValues, Dispatch<FormValues>] {
+  return useState<FormValues>({ email: "", username: "" });
+}
+
 export function NewInstance({
-  createFirstUser,
   password,
+  ...newInstanceFormProps
 }: NewInstanceProps): ReactNode {
   if (password) {
     return (
@@ -27,71 +24,81 @@ export function NewInstance({
     );
   }
 
-  return <NewInstanceForm createFirstUser={createFirstUser} />;
+  return <NewInstanceForm {...newInstanceFormProps} />;
 }
 
 export type NewInstanceProps = NewInstanceFormProps & {
   password?: string;
 };
 
-function NewInstanceForm({ createFirstUser }: NewInstanceFormProps): ReactNode {
-  const form = useForm<FormValues>({
-    defaultValues: { email: "", username: "" },
-    resolver: zodResolver(formSchema),
-  });
-
-  function onSubmit({ email, username }: FormValues): void {
-    createFirstUser({ email, login: username });
-  }
+function NewInstanceForm({
+  formValues,
+  onChangeFormValues,
+  onSubmit,
+}: NewInstanceFormProps): ReactNode {
+  const { email, username } = formValues;
+  const setEmail: Dispatch<string> = (newEmail) => {
+    onChangeFormValues({ email: newEmail, username });
+  };
+  const setUsername: Dispatch<string> = (newUsername) => {
+    onChangeFormValues({ email, username: newUsername });
+  };
 
   return (
     <Card>
       <p>
         It looks like this is a new instance of Tattr. Ready to get started?
       </p>
-      <Form {...form}>
-        {/* eslint-disable-next-line @typescript-eslint/no-misused-promises */}
-        <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <TextField placeholder="user@example.com" {...field} />
-                </FormControl>
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="username"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Username</FormLabel>
-                <FormControl>
-                  <TextField placeholder="user" {...field} />
-                </FormControl>
-              </FormItem>
-            )}
-          />
-          <Button className="self-end" type="submit">
-            Let&apos;s go
-          </Button>
-        </form>
-      </Form>
+      {}
+      <Form.Root
+        className="space-y-4"
+        onSubmit={(event) => {
+          onSubmit();
+          event.preventDefault();
+        }}
+      >
+        <Form.Field name="email">
+          <Form.Label>Email</Form.Label>
+          <Form.Control asChild>
+            <EmailField onChange={setEmail} required value={email} />
+          </Form.Control>
+        </Form.Field>
+        <Form.Field name="username">
+          <Form.Label>Username</Form.Label>
+          <Form.Control asChild>
+            <TextField onChange={setUsername} value={username} />
+          </Form.Control>
+        </Form.Field>
+        <Button className="self-end" type="submit">
+          Let&apos;s go
+        </Button>
+      </Form.Root>
     </Card>
   );
 }
 
 type NewInstanceFormProps = {
-  createFirstUser: (params: { email: string; login: string }) => void;
+  formValues: FormValues;
+  onChangeFormValues: Dispatch<FormValues>;
+  onSubmit: () => void;
 };
 
 type FormValues = z.infer<typeof formSchema>;
 
+// Will come back and use this for validation.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const formSchema = z.object({
-  email: z.string().min(2).max(50),
-  username: z.string().min(2).max(50),
+  email: z.string().email(),
+  username: z
+    .string()
+    .min(3)
+    .max(64)
+    .regex(
+      /^[a-zA-Z0-9!#$%&'*+-/=?^_`{|}~.]*$/,
+      "Usernames can only contain letters, numbers, and printable characters (!#$%&'*+-/=?^_`{|}~.).",
+    )
+    .regex(
+      /^(?:[^.]+\.?)*[^.]+$/,
+      "Dots cannot be the first or last character of a username, and cannot appear consecutively.",
+    ),
 });

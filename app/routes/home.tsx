@@ -8,7 +8,7 @@ import type { Failable } from "~/utils/types/Failable";
 import { Card } from "~/components/card";
 import { PageLayout } from "~/components/page-layout";
 import { Login } from "~/modules/login";
-import { NewInstance } from "~/modules/new-instance";
+import { NewInstance, useNewInstanceFormValues } from "~/modules/new-instance";
 import { auth } from "~/utils/auth.server";
 import {
   commitSession,
@@ -25,6 +25,9 @@ export default function Home({
 }: Route.ComponentProps): ReactNode {
   const submit = useSubmit();
 
+  const [newInstanceFormValues, setNewInstanceFormValues] =
+    useNewInstanceFormValues();
+
   const { isLoggedIn, isNewInstance } = loaderData;
   const password =
     actionData?.isSuccess && actionData.kind === "newInstance"
@@ -39,9 +42,11 @@ export default function Home({
       </Card>
       {isNewInstance || password ? (
         <NewInstance
-          createFirstUser={(params) => {
+          formValues={newInstanceFormValues}
+          onChangeFormValues={setNewInstanceFormValues}
+          onSubmit={() => {
             submit(
-              { action: "newInstance", ...params },
+              { action: "newInstance", ...newInstanceFormValues },
               { method: "post" },
             ).catch((error: unknown) => {
               console.error(error);
@@ -105,16 +110,16 @@ async function login(
   session: Session,
   formData: FormData,
 ): Promise<LoginResult> {
-  const login = formData.get("login");
+  const username = formData.get("username");
   const password = formData.get("password");
-  if (typeof login !== "string" || typeof password !== "string") {
+  if (typeof username !== "string" || typeof password !== "string") {
     return {
-      error: "Please provide a login and password.",
+      error: "Please provide a username and password.",
       isSuccess: false,
     };
   }
 
-  const result = await auth(context).verifyCredentials({ login, password });
+  const result = await auth(context).verifyCredentials({ password, username });
   if (!result.isSuccess) {
     return result;
   }
@@ -130,16 +135,16 @@ async function newInstance(
   context: AppLoadContext,
   formData: FormData,
 ): Promise<NewInstanceResult> {
-  let login = formData.get("login");
+  let username = formData.get("username");
   let email = formData.get("email");
-  if (typeof login !== "string" || typeof email !== "string") {
-    return { error: "Email and login are required", isSuccess: false };
+  if (typeof username !== "string" || typeof email !== "string") {
+    return { error: "Email and username are required", isSuccess: false };
   }
 
-  login = login.trim();
+  username = username.trim();
   email = email.trim();
-  if (!login || !email) {
-    return { error: "Email and login are required", isSuccess: false };
+  if (!username || !email) {
+    return { error: "Email and username are required", isSuccess: false };
   }
 
   try {
@@ -150,7 +155,7 @@ async function newInstance(
       };
     }
 
-    const result = await auth(context).createUser({ email, login });
+    const result = await auth(context).createUser({ email, username });
     if (!result.isSuccess) {
       throw result.error;
     }
