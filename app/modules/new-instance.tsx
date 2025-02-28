@@ -1,11 +1,17 @@
 import { Form } from "radix-ui";
-import { type Dispatch, type ReactNode, useState } from "react";
+import {
+  type Dispatch,
+  type ReactNode,
+  type SetStateAction,
+  useState,
+} from "react";
 import { z } from "zod";
 
 import { Button } from "~/components/button";
 import { Card } from "~/components/card";
 import { EmailField } from "~/components/email-field";
 import { TextField } from "~/components/text-field";
+import { createOnChangeForKey } from "~/utils/create-on-change-for-key";
 
 export function useNewInstanceFormValues(): [FormValues, Dispatch<FormValues>] {
   return useState<FormValues>({ email: "", username: "" });
@@ -37,12 +43,8 @@ function NewInstanceForm({
   onSubmit,
 }: NewInstanceFormProps): ReactNode {
   const { email, username } = formValues;
-  const setEmail: Dispatch<string> = (newEmail) => {
-    onChangeFormValues({ email: newEmail, username });
-  };
-  const setUsername: Dispatch<string> = (newUsername) => {
-    onChangeFormValues({ email, username: newUsername });
-  };
+  const setEmail = createOnChangeForKey(onChangeFormValues, "email");
+  const setUsername = createOnChangeForKey(onChangeFormValues, "username");
 
   return (
     <Card>
@@ -79,7 +81,7 @@ function NewInstanceForm({
 
 type NewInstanceFormProps = {
   formValues: FormValues;
-  onChangeFormValues: Dispatch<FormValues>;
+  onChangeFormValues: Dispatch<SetStateAction<FormValues>>;
   onSubmit: () => void;
 };
 
