@@ -13,7 +13,10 @@ import { EmailField } from "~/components/email-field";
 import { TextField } from "~/components/text-field";
 import { createOnChangeForKey } from "~/utils/create-on-change-for-key";
 
-export function useNewInstanceFormValues(): [FormValues, Dispatch<FormValues>] {
+export function useNewInstanceFormValues(): [
+  FormValues,
+  Dispatch<SetStateAction<FormValues>>,
+] {
   return useState<FormValues>({ email: "", username: "" });
 }
 
