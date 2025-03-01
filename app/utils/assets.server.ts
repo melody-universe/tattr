@@ -1,6 +1,6 @@
 import type { AppLoadContext } from "react-router";
 
-import type { Failable } from "./types/Failable";
+import type { Fallible } from "./types/Fallible";
 
 import { assets as dbAssets } from "../../database/schema";
 
@@ -38,7 +38,7 @@ export function assets({
     userId: number;
   };
 
-  type CreateAssetResponse = Failable<{ assetId: number }>;
+  type CreateAssetResponse = Fallible<{ assetId: number }>;
 
   return { createAsset };
 }

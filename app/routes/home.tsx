@@ -3,7 +3,7 @@ import type { AppLoadContext } from "react-router";
 
 import { redirect, useSubmit } from "react-router";
 
-import type { Failable } from "~/utils/types/Failable";
+import type { Fallible } from "~/utils/types/Fallible";
 
 import { Card } from "~/components/card";
 import { PageLayout } from "~/components/page-layout";
@@ -133,7 +133,7 @@ async function login(
   return { kind: "login", ...result };
 }
 
-type LoginResult = Failable<{ kind: "login"; userId: number }>;
+type LoginResult = Fallible<{ kind: "login"; userId: number }>;
 
 async function newInstance(
   context: AppLoadContext,
@@ -172,7 +172,7 @@ async function newInstance(
   }
 }
 
-type NewInstanceResult = Failable<{ kind: "newInstance"; password: string }>;
+type NewInstanceResult = Fallible<{ kind: "newInstance"; password: string }>;
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const session = await getSession(request.headers.get("Cookie"));
