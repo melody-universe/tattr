@@ -1,20 +1,17 @@
 import type { ReactNode } from "react";
 import type { AppLoadContext } from "react-router";
 
-import { redirect, useSubmit } from "react-router";
+import assert from "assert";
+import { useSubmit } from "react-router";
 
 import type { Failure, Fallible } from "~/utils/types/Fallible";
 
 import { Card } from "~/components/card";
 import { PageLayout } from "~/components/page-layout";
-import { Login, useLoginFormValues } from "~/modules/login";
+import { login, Login, useLoginFormValues } from "~/modules/login";
 import { NewInstance, useNewInstanceFormValues } from "~/modules/new-instance";
 import { auth } from "~/utils/auth.server";
-import {
-  commitSession,
-  getSession,
-  type Session,
-} from "~/utils/sessions.server";
+import { getSession } from "~/utils/sessions.server";
 import { stringifyError } from "~/utils/stringify-error";
 
 import type { Route } from "./+types/home";
@@ -88,6 +85,7 @@ export async function action({
 
   switch (action) {
     case "login": {
+      assert(login);
       return login(context, session, formData);
     }
     case "newInstance":
@@ -95,32 +93,6 @@ export async function action({
     default:
       return { error: "An unexpected error occurred", isSuccess: false };
   }
-}
-
-async function login(
-  context: AppLoadContext,
-  session: Session,
-  formData: FormData,
-): Promise<Failure | Response> {
-  const username = formData.get("username");
-  const password = formData.get("password");
-  if (typeof username !== "string" || typeof password !== "string") {
-    return {
-      error: "Please provide a username and password.",
-      isSuccess: false,
-    };
-  }
-
-  const result = await auth(context).verifyCredentials({ password, username });
-  if (!result.isSuccess) {
-    return result;
-  }
-
-  session.set("userId", result.userId);
-
-  return redirect("/", {
-    headers: { "Set-Cookie": await commitSession(session) },
-  });
 }
 
 async function newInstance(
