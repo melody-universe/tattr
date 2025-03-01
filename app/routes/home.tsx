@@ -3,7 +3,7 @@ import type { AppLoadContext } from "react-router";
 
 import { redirect, useSubmit } from "react-router";
 
-import type { Fallible } from "~/utils/types/Fallible";
+import type { Failure, Fallible } from "~/utils/types/Fallible";
 
 import { Card } from "~/components/card";
 import { PageLayout } from "~/components/page-layout";
@@ -30,10 +30,7 @@ export default function Home({
   const [loginFormValues, setLoginFormValues] = useLoginFormValues();
 
   const { isLoggedIn, isNewInstance } = loaderData;
-  const password =
-    actionData?.isSuccess && actionData.kind === "newInstance"
-      ? actionData.password
-      : undefined;
+  const password = actionData?.isSuccess ? actionData.password : undefined;
 
   return (
     <PageLayout>
@@ -81,7 +78,7 @@ export default function Home({
 export async function action({
   context,
   request,
-}: Route.ActionArgs): Promise<ActionResult | Response> {
+}: Route.ActionArgs): Promise<Failure | NewInstanceResult | Response> {
   const session = await getSession(request.headers.get("Cookie"));
   const formData = await request.formData();
   const action = formData.get("action");
@@ -91,14 +88,7 @@ export async function action({
 
   switch (action) {
     case "login": {
-      const loginResult = await login(context, session, formData);
-      if (loginResult.isSuccess) {
-        return redirect("/", {
-          headers: { "Set-Cookie": await commitSession(session) },
-        });
-      } else {
-        return loginResult;
-      }
+      return login(context, session, formData);
     }
     case "newInstance":
       return newInstance(context, formData);
@@ -107,13 +97,11 @@ export async function action({
   }
 }
 
-type ActionResult = LoginResult | NewInstanceResult;
-
 async function login(
   context: AppLoadContext,
   session: Session,
   formData: FormData,
-): Promise<LoginResult> {
+): Promise<Failure | Response> {
   const username = formData.get("username");
   const password = formData.get("password");
   if (typeof username !== "string" || typeof password !== "string") {
@@ -130,10 +118,10 @@ async function login(
 
   session.set("userId", result.userId);
 
-  return { kind: "login", ...result };
+  return redirect("/", {
+    headers: { "Set-Cookie": await commitSession(session) },
+  });
 }
-
-type LoginResult = Fallible<{ kind: "login"; userId: number }>;
 
 async function newInstance(
   context: AppLoadContext,

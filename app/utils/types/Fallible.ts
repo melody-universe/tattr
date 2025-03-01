@@ -1,3 +1,5 @@
 export type Fallible<Result extends object> =
-  | (Result & { isSuccess: true })
-  | { error: unknown; isSuccess: false };
+  | Failure
+  | (Result & { isSuccess: true });
+
+export type Failure = { error: unknown; isSuccess: false };
