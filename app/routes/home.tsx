@@ -107,7 +107,7 @@ export async function action({
   }
 }
 
-type ActionResult = ErrorResult | LoginResult | NewInstanceResult;
+type ActionResult = LoginResult | NewInstanceResult;
 
 async function login(
   context: AppLoadContext,
@@ -173,8 +173,6 @@ async function newInstance(
 }
 
 type NewInstanceResult = Failable<{ kind: "newInstance"; password: string }>;
-
-type ErrorResult = { error: unknown; isSuccess: false };
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const session = await getSession(request.headers.get("Cookie"));
