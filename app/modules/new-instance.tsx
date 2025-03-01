@@ -1,3 +1,5 @@
+import type { AppLoadContext } from "react-router";
+
 import { Form } from "radix-ui";
 import {
   type Dispatch,
@@ -5,13 +7,18 @@ import {
   type SetStateAction,
   useState,
 } from "react";
+import { serverOnly$ } from "vite-env-only/macros";
 import { z } from "zod";
+
+import type { Fallible } from "~/utils/types/Fallible";
 
 import { Button } from "~/components/button";
 import { Card } from "~/components/card";
 import { EmailField } from "~/components/email-field";
 import { TextField } from "~/components/text-field";
+import { auth } from "~/utils/auth.server";
 import { createOnChangeForKey } from "~/utils/create-on-change-for-key";
+import { stringifyError } from "~/utils/stringify-error";
 
 export function useNewInstanceFormValues(): [
   FormValues,
@@ -87,6 +94,54 @@ type NewInstanceFormProps = {
   onChangeFormValues: Dispatch<SetStateAction<FormValues>>;
   onSubmit: () => void;
 };
+
+export const newInstance = serverOnly$(
+  async (
+    context: AppLoadContext,
+    formData: FormData,
+  ): Promise<NewInstanceResult> => {
+    let username = formData.get("username");
+    let email = formData.get("email");
+    if (typeof username !== "string" || typeof email !== "string") {
+      return { error: "Email and username are required", isSuccess: false };
+    }
+
+    username = username.trim();
+    email = email.trim();
+    if (!username || !email) {
+      return { error: "Email and username are required", isSuccess: false };
+    }
+
+    try {
+      if (!(await auth(context).isNewInstance())) {
+        return {
+          error: "A user already exists in this instance.",
+          isSuccess: false,
+        };
+      }
+
+      const result = await auth(context).createUser({ email, username });
+      if (!result.isSuccess) {
+        throw result.error;
+      }
+      return {
+        kind: "newInstance",
+        isSuccess: true,
+        password: result.password,
+      };
+    } catch (error: unknown) {
+      return {
+        error: stringifyError(error),
+        isSuccess: false,
+      };
+    }
+  },
+);
+
+export type NewInstanceResult = Fallible<{
+  kind: "newInstance";
+  password: string;
+}>;
 
 type FormValues = z.infer<typeof formSchema>;
 
