@@ -1,9 +1,10 @@
 import type { ReactNode } from "react";
 
-import { useSubmit } from "react-router";
+import { redirect, useSubmit } from "react-router";
 
 import type { Failure } from "~/utils/types/Fallible";
 
+import { Button } from "~/components/button";
 import { Card } from "~/components/card";
 import { PageLayout } from "~/components/page-layout";
 import { login, Login, useLoginFormController } from "~/modules/login";
@@ -15,7 +16,7 @@ import {
 } from "~/modules/new-instance";
 import { assertIsDefined } from "~/utils/assert-is-defined";
 import { instance } from "~/utils/instance.server";
-import { getSession } from "~/utils/sessions.server";
+import { destroySession, getSession } from "~/utils/sessions.server";
 
 import type { Route } from "./+types/home";
 
@@ -59,10 +60,26 @@ export default function Home({
           password={password}
         />
       ) : isLoggedIn ? (
-        <Card>
-          You are current logged in. Sorry, I lied. You still can&apos;t really
-          do anything.
-        </Card>
+        <>
+          <Card>
+            You are current logged in. Sorry, I lied. You still can&apos;t
+            really do anything.
+          </Card>
+          <Card>
+            <p>Or if you like, you can reset this instance.</p>
+            <Button
+              onClick={() => {
+                submit({ action: "resetInstance" }, { method: "post" }).catch(
+                  (error: unknown) => {
+                    console.error(error);
+                  },
+                );
+              }}
+            >
+              Reset Instance
+            </Button>
+          </Card>
+        </>
       ) : (
         <Login controller={loginFormController} />
       )}
@@ -89,6 +106,11 @@ export async function action({
     case "newInstance":
       assertIsDefined(newInstance);
       return newInstance(context, formData);
+    case "resetInstance":
+      await instance(context).reset();
+      return redirect("/", {
+        headers: { "Set-Cookie": await destroySession(session) },
+      });
     default:
       return { error: "An unexpected error occurred", isSuccess: false };
   }

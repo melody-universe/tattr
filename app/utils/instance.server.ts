@@ -2,7 +2,7 @@
 
 import type { AppLoadContext } from "react-router";
 
-import { users } from "~/database/schema";
+import { assets, users } from "~/database/schema";
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export function instance(context: AppLoadContext) {
@@ -14,5 +14,10 @@ export function instance(context: AppLoadContext) {
     return result.length === 0;
   }
 
-  return { isNew };
+  async function reset(): Promise<void> {
+    await context.db.delete(assets);
+    await context.db.delete(users);
+  }
+
+  return { isNew, reset };
 }
