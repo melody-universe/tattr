@@ -96,7 +96,7 @@ export async function action({
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const session = await getSession(request.headers.get("Cookie"));
-  const isNewInstance = await instance(context).isNewInstance();
+  const isNewInstance = await instance(context).isNew();
 
   return {
     isLoggedIn: session.has("userId"),

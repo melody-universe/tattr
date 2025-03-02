@@ -133,7 +133,7 @@ export const newInstance = serverOnly$(
     }
 
     try {
-      if (!(await instance(context).isNewInstance())) {
+      if (!(await instance(context).isNew())) {
         return {
           error: "A user already exists in this instance.",
           isSuccess: false,
