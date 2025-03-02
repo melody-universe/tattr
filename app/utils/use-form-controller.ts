@@ -2,7 +2,17 @@ import { type Dispatch, type SetStateAction, useState } from "react";
 import z from "zod";
 import { init } from "zod-empty";
 
-export function useFormController<
+export function buildFormControllerHook<TZodType extends z.ZodType>(
+  schema: TZodType,
+): FormControllerHook<TZodType> {
+  return (onSubmit) => useFormController({ onSubmit, schema });
+}
+
+type FormControllerHook<TZodType extends z.ZodType> = (
+  onSubmit: (values: z.infer<TZodType>) => void,
+) => FormController<TZodType>;
+
+function useFormController<
   TFormValues,
   TZodType extends z.ZodType<TFormValues>,
 >({

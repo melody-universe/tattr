@@ -13,15 +13,27 @@ import { auth } from "~/utils/auth.server";
 import { createOnChangeForKey } from "~/utils/create-on-change-for-key";
 import { commitSession } from "~/utils/sessions.server";
 import {
+  buildFormControllerHook,
   type FormController,
-  useFormController,
 } from "~/utils/use-form-controller";
 
-export function useLoginFormController(
-  onSubmit: (values: z.infer<typeof schema>) => void,
-): FormController<typeof schema> {
-  return useFormController({ onSubmit, schema });
-}
+const schema = z.object({
+  password: z.string(),
+  username: z
+    .string()
+    .min(3)
+    .max(64)
+    .regex(
+      /^[a-zA-Z0-9!#$%&'*+-/=?^_`{|}~.]*$/,
+      "Usernames can only contain letters, numbers, and printable characters (!#$%&'*+-/=?^_`{|}~.).",
+    )
+    .regex(
+      /^(?:(?:[^.]+\.?)*[^.]+)?$/,
+      "Dots cannot be the first or last character of a username, and cannot appear consecutively.",
+    ),
+});
+
+export const useLoginFormController = buildFormControllerHook(schema);
 
 export function Login({
   controller: { errors, formValues, onSubmit: handleSubmit, setFormValues },
@@ -98,19 +110,3 @@ export const login = serverOnly$(
     });
   },
 );
-
-const schema = z.object({
-  password: z.string(),
-  username: z
-    .string()
-    .min(3)
-    .max(64)
-    .regex(
-      /^[a-zA-Z0-9!#$%&'*+-/=?^_`{|}~.]*$/,
-      "Usernames can only contain letters, numbers, and printable characters (!#$%&'*+-/=?^_`{|}~.).",
-    )
-    .regex(
-      /^(?:(?:[^.]+\.?)*[^.]+)?$/,
-      "Dots cannot be the first or last character of a username, and cannot appear consecutively.",
-    ),
-});
