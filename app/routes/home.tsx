@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 
-import assert from "assert";
 import { useSubmit } from "react-router";
 
 import type { Failure } from "~/utils/types/Fallible";
@@ -14,6 +13,7 @@ import {
   type NewInstanceResult,
   useNewInstanceFormValues,
 } from "~/modules/new-instance";
+import { assertIsDefined } from "~/utils/assert-is-defined";
 import { auth } from "~/utils/auth.server";
 import { getSession } from "~/utils/sessions.server";
 
@@ -88,11 +88,11 @@ export async function action({
 
   switch (action) {
     case "login": {
-      assert(login);
+      assertIsDefined(login);
       return login(context, session, formData);
     }
     case "newInstance":
-      assert(newInstance);
+      assertIsDefined(newInstance);
       return newInstance(context, formData);
     default:
       return { error: "An unexpected error occurred", isSuccess: false };
