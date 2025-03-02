@@ -6,7 +6,7 @@ import type { Failure } from "~/utils/types/Fallible";
 
 import { Card } from "~/components/card";
 import { PageLayout } from "~/components/page-layout";
-import { login, Login, useLoginFormValues } from "~/modules/login";
+import { login, Login, useLoginFormController } from "~/modules/login";
 import {
   newInstance,
   NewInstance,
@@ -27,7 +27,13 @@ export default function Home({
 
   const [newInstanceFormValues, setNewInstanceFormValues] =
     useNewInstanceFormValues();
-  const [loginFormValues, setLoginFormValues] = useLoginFormValues();
+  const loginFormController = useLoginFormController((formValues) => {
+    submit({ action: "login", ...formValues }, { method: "post" }).catch(
+      (error: unknown) => {
+        console.error(error);
+      },
+    );
+  });
 
   const { isLoggedIn, isNewInstance } = loaderData;
   const password = actionData?.isSuccess ? actionData.password : undefined;
@@ -58,18 +64,7 @@ export default function Home({
           do anything.
         </Card>
       ) : (
-        <Login
-          formValues={loginFormValues}
-          onChangeFormValues={setLoginFormValues}
-          onSubmit={() => {
-            submit(
-              { action: "login", ...loginFormValues },
-              { method: "post" },
-            ).catch((error: unknown) => {
-              console.error(error);
-            });
-          }}
-        />
+        <Login controller={loginFormController} />
       )}
     </PageLayout>
   );

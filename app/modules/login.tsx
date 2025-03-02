@@ -1,9 +1,4 @@
-import {
-  type Dispatch,
-  type ReactNode,
-  type SetStateAction,
-  useState,
-} from "react";
+import { type ReactNode } from "react";
 import { type AppLoadContext, redirect, type Session } from "react-router";
 import { serverOnly$ } from "vite-env-only/macros";
 import { z } from "zod";
@@ -16,47 +11,30 @@ import { PasswordField } from "~/components/password-field";
 import { TextField } from "~/components/text-field";
 import { auth } from "~/utils/auth.server";
 import { createOnChangeForKey } from "~/utils/create-on-change-for-key";
-import { type Errors } from "~/utils/errors";
 import { commitSession } from "~/utils/sessions.server";
+import {
+  type FormController,
+  useFormController,
+} from "~/utils/use-form-controller";
 
-export function useLoginFormValues(): [
-  FormValues,
-  Dispatch<SetStateAction<FormValues>>,
-] {
-  return useState<FormValues>({ password: "", username: "" });
+export function useLoginFormController(
+  onSubmit: (values: z.infer<typeof schema>) => void,
+): FormController<typeof schema> {
+  return useFormController({ onSubmit, schema });
 }
 
 export function Login({
-  formValues,
-  onChangeFormValues,
-  onSubmit,
+  controller: { errors, formValues, onSubmit: handleSubmit, setFormValues },
 }: LoginProps): ReactNode {
   const { password, username } = formValues;
-  const setUsername = createOnChangeForKey(onChangeFormValues, "username");
-  const setPassword = createOnChangeForKey(onChangeFormValues, "password");
-
-  const [errors, setErrors] = useState<Errors<FormValues>>({});
+  const setUsername = createOnChangeForKey(setFormValues, "username");
+  const setPassword = createOnChangeForKey(setFormValues, "password");
 
   return (
     <form
       onSubmit={(event) => {
         event.preventDefault();
-
-        const result = formSchema.safeParse(formValues);
-        if (!result.success) {
-          setErrors(
-            Object.fromEntries(
-              Object.entries(result.error.format()).map(([field, errors]) => [
-                field,
-                Array.isArray(errors)
-                  ? errors.join("\n")
-                  : errors._errors.join("\n"),
-              ]),
-            ) as Errors<FormValues>,
-          );
-        }
-
-        onSubmit();
+        handleSubmit();
       }}
     >
       <Card>
@@ -69,13 +47,17 @@ export function Login({
           placeholder="Username"
           value={username}
         />
-        {errors.username && <p className="text-red-500">{errors.username}</p>}
+        {errors?.username?._errors && (
+          <p className="text-red-500">{errors.username._errors.join("\n")}</p>
+        )}
         <PasswordField
           onChange={setPassword}
           placeholder="Password"
           value={password}
         />
-        {errors.password && <p className="text-red-500">{errors.password}</p>}
+        {errors?.password?._errors && (
+          <p className="text-red-500">{errors.password._errors.join("\n")}</p>
+        )}
         <Button className="self-end" type="submit">
           Login
         </Button>
@@ -84,11 +66,7 @@ export function Login({
   );
 }
 
-type LoginProps = {
-  formValues: FormValues;
-  onChangeFormValues: Dispatch<SetStateAction<FormValues>>;
-  onSubmit: () => void;
-};
+type LoginProps = { controller: FormController<typeof schema> };
 
 export const login = serverOnly$(
   async (
@@ -121,9 +99,7 @@ export const login = serverOnly$(
   },
 );
 
-type FormValues = z.infer<typeof formSchema>;
-
-const formSchema = z.object({
+const schema = z.object({
   password: z.string(),
   username: z
     .string()
