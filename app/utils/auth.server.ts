@@ -36,14 +36,6 @@ export function auth(context: AppLoadContext) {
 
   type CreateUserResponse = Fallible<{ password: string }>;
 
-  async function isNewInstance(): Promise<boolean> {
-    const result = await context.db
-      .select({ id: users.id })
-      .from(users)
-      .limit(1);
-    return result.length === 0;
-  }
-
   async function verifyCredentials({
     password,
     username,
@@ -71,7 +63,6 @@ export function auth(context: AppLoadContext) {
 
   return {
     createUser,
-    isNewInstance,
     verifyCredentials,
   };
 }

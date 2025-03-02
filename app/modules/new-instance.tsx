@@ -1,12 +1,7 @@
 import type { AppLoadContext } from "react-router";
 
 import { Form } from "radix-ui";
-import {
-  type Dispatch,
-  type ReactNode,
-  type SetStateAction,
-  useState,
-} from "react";
+import { type ReactNode } from "react";
 import { serverOnly$ } from "vite-env-only/macros";
 import { z } from "zod";
 
@@ -18,18 +13,36 @@ import { EmailField } from "~/components/email-field";
 import { TextField } from "~/components/text-field";
 import { auth } from "~/utils/auth.server";
 import { createOnChangeForKey } from "~/utils/create-on-change-for-key";
+import { instance } from "~/utils/instance.server";
 import { stringifyError } from "~/utils/stringify-error";
+import {
+  buildFormControllerHook,
+  type FormController,
+} from "~/utils/use-form-controller";
 
-export function useNewInstanceFormValues(): [
-  FormValues,
-  Dispatch<SetStateAction<FormValues>>,
-] {
-  return useState<FormValues>({ email: "", username: "" });
-}
+// Will come back and use this for validation.
+
+const schema = z.object({
+  email: z.string().email(),
+  username: z
+    .string()
+    .min(3)
+    .max(64)
+    .regex(
+      /^[a-zA-Z0-9!#$%&'*+-/=?^_`{|}~.]*$/,
+      "Usernames can only contain letters, numbers, and printable characters (!#$%&'*+-/=?^_`{|}~.).",
+    )
+    .regex(
+      /^(?:[^.]+\.?)*[^.]+$/,
+      "Dots cannot be the first or last character of a username, and cannot appear consecutively.",
+    ),
+});
+
+export const useNewInstanceFormController = buildFormControllerHook(schema);
 
 export function NewInstance({
+  formController,
   password,
-  ...newInstanceFormProps
 }: NewInstanceProps): ReactNode {
   if (password) {
     return (
@@ -40,21 +53,20 @@ export function NewInstance({
     );
   }
 
-  return <NewInstanceForm {...newInstanceFormProps} />;
+  return <NewInstanceForm controller={formController} />;
 }
 
-export type NewInstanceProps = NewInstanceFormProps & {
+export type NewInstanceProps = {
+  formController: FormController<typeof schema>;
   password?: string;
 };
 
 function NewInstanceForm({
-  formValues,
-  onChangeFormValues,
-  onSubmit,
+  controller: { errors, formValues, onSubmit: handleSubmit, setFormValues },
 }: NewInstanceFormProps): ReactNode {
   const { email, username } = formValues;
-  const setEmail = createOnChangeForKey(onChangeFormValues, "email");
-  const setUsername = createOnChangeForKey(onChangeFormValues, "username");
+  const setEmail = createOnChangeForKey(setFormValues, "email");
+  const setUsername = createOnChangeForKey(setFormValues, "username");
 
   return (
     <Card>
@@ -65,7 +77,7 @@ function NewInstanceForm({
       <Form.Root
         className="space-y-4"
         onSubmit={(event) => {
-          onSubmit();
+          handleSubmit();
           event.preventDefault();
         }}
       >
@@ -74,12 +86,22 @@ function NewInstanceForm({
           <Form.Control asChild>
             <EmailField onChange={setEmail} required value={email} />
           </Form.Control>
+          {errors?.email?._errors.map((error, i) => (
+            <Form.Message className="text-red-500" key={i}>
+              {error}
+            </Form.Message>
+          ))}
         </Form.Field>
         <Form.Field name="username">
           <Form.Label>Username</Form.Label>
           <Form.Control asChild>
             <TextField onChange={setUsername} value={username} />
           </Form.Control>
+          {errors?.username?._errors.map((error, i) => (
+            <Form.Message className="text-red-500" key={i}>
+              {error}
+            </Form.Message>
+          ))}
         </Form.Field>
         <Button className="self-end" type="submit">
           Let&apos;s go
@@ -90,9 +112,7 @@ function NewInstanceForm({
 }
 
 type NewInstanceFormProps = {
-  formValues: FormValues;
-  onChangeFormValues: Dispatch<SetStateAction<FormValues>>;
-  onSubmit: () => void;
+  controller: FormController<typeof schema>;
 };
 
 export const newInstance = serverOnly$(
@@ -113,7 +133,7 @@ export const newInstance = serverOnly$(
     }
 
     try {
-      if (!(await auth(context).isNewInstance())) {
+      if (!(await instance(context).isNewInstance())) {
         return {
           error: "A user already exists in this instance.",
           isSuccess: false,
@@ -142,23 +162,3 @@ export type NewInstanceResult = Fallible<{
   kind: "newInstance";
   password: string;
 }>;
-
-type FormValues = z.infer<typeof formSchema>;
-
-// Will come back and use this for validation.
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const formSchema = z.object({
-  email: z.string().email(),
-  username: z
-    .string()
-    .min(3)
-    .max(64)
-    .regex(
-      /^[a-zA-Z0-9!#$%&'*+-/=?^_`{|}~.]*$/,
-      "Usernames can only contain letters, numbers, and printable characters (!#$%&'*+-/=?^_`{|}~.).",
-    )
-    .regex(
-      /^(?:[^.]+\.?)*[^.]+$/,
-      "Dots cannot be the first or last character of a username, and cannot appear consecutively.",
-    ),
-});

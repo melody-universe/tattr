@@ -11,10 +11,10 @@ import {
   newInstance,
   NewInstance,
   type NewInstanceResult,
-  useNewInstanceFormValues,
+  useNewInstanceFormController,
 } from "~/modules/new-instance";
 import { assertIsDefined } from "~/utils/assert-is-defined";
-import { auth } from "~/utils/auth.server";
+import { instance } from "~/utils/instance.server";
 import { getSession } from "~/utils/sessions.server";
 
 import type { Route } from "./+types/home";
@@ -25,8 +25,17 @@ export default function Home({
 }: Route.ComponentProps): ReactNode {
   const submit = useSubmit();
 
-  const [newInstanceFormValues, setNewInstanceFormValues] =
-    useNewInstanceFormValues();
+  const newInstanceFormController = useNewInstanceFormController(
+    (formValues) => {
+      submit(
+        { action: "newInstance", ...formValues },
+        { method: "post" },
+      ).catch((error: unknown) => {
+        console.error(error);
+      });
+    },
+  );
+
   const loginFormController = useLoginFormController((formValues) => {
     submit({ action: "login", ...formValues }, { method: "post" }).catch(
       (error: unknown) => {
@@ -46,16 +55,7 @@ export default function Home({
       </Card>
       {isNewInstance || password ? (
         <NewInstance
-          formValues={newInstanceFormValues}
-          onChangeFormValues={setNewInstanceFormValues}
-          onSubmit={() => {
-            submit(
-              { action: "newInstance", ...newInstanceFormValues },
-              { method: "post" },
-            ).catch((error: unknown) => {
-              console.error(error);
-            });
-          }}
+          formController={newInstanceFormController}
           password={password}
         />
       ) : isLoggedIn ? (
@@ -96,7 +96,7 @@ export async function action({
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const session = await getSession(request.headers.get("Cookie"));
-  const isNewInstance = await auth(context).isNewInstance();
+  const isNewInstance = await instance(context).isNewInstance();
 
   return {
     isLoggedIn: session.has("userId"),
