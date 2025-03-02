@@ -1,6 +1,6 @@
 export function assertIsDefined<TValue>(
-  value: TValue,
-): asserts value is Exclude<TValue, undefined> {
+  value: TValue | undefined,
+): asserts value is TValue {
   if (value === undefined) {
     throw new Error("Encountered an unexpected undefined value");
   }
