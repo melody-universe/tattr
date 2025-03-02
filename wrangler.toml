@@ -12,7 +12,7 @@ VALUE_FROM_CLOUDFLARE = "Hello from Cloudflare"
 [[d1_databases]]
 binding = "DB"
 database_name = "tattr"
-database_id = "c1edd7fa-93c9-4cf0-99cc-801112ee1eea"
+database_id = "64e85594-e8ee-4e02-88b8-0c821b67ae63"
 migrations_dir = "drizzle"
 
 [[r2_buckets]]
