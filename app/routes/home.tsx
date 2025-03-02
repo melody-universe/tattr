@@ -108,10 +108,3 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     isNewInstance,
   };
 }
-
-export function meta(_: Route.MetaArgs): Route.MetaDescriptors {
-  return [
-    { title: "New React Router App" },
-    { content: "Welcome to React Router!", name: "description" },
-  ];
-}

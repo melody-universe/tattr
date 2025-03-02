@@ -87,3 +87,10 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps): ReactNode {
     </main>
   );
 }
+
+export function meta(_: Route.MetaArgs): Route.MetaDescriptors {
+  return [
+    { title: "Tattr" },
+    { content: "Welcome to Tattr!", name: "description" },
+  ];
+}
