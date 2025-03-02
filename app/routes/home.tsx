@@ -16,7 +16,11 @@ import {
 } from "~/modules/new-instance";
 import { assertIsDefined } from "~/utils/assert-is-defined";
 import { instance } from "~/utils/instance.server";
-import { destroySession, getSession } from "~/utils/sessions.server";
+import {
+  destroySession,
+  getSession,
+  type Session,
+} from "~/utils/sessions.server";
 
 import type { Route } from "./+types/home";
 
@@ -79,6 +83,20 @@ export default function Home({
               Reset Instance
             </Button>
           </Card>
+          <Card>
+            <p>Also you can sign out.</p>
+            <Button
+              onClick={() => {
+                submit({ action: "signOut" }, { method: "post" }).catch(
+                  (error: unknown) => {
+                    console.error(error);
+                  },
+                );
+              }}
+            >
+              Sign out
+            </Button>
+          </Card>
         </>
       ) : (
         <Login controller={loginFormController} />
@@ -108,12 +126,18 @@ export async function action({
       return newInstance(context, formData);
     case "resetInstance":
       await instance(context).reset();
-      return redirect("/", {
-        headers: { "Set-Cookie": await destroySession(session) },
-      });
+      return await signOut(session);
+    case "signOut":
+      return await signOut(session);
     default:
       return { error: "An unexpected error occurred", isSuccess: false };
   }
+}
+
+async function signOut(session: Session): Promise<Response> {
+  return redirect("/", {
+    headers: { "Set-Cookie": await destroySession(session) },
+  });
 }
 
 export async function loader({ context, request }: Route.LoaderArgs) {

@@ -27,6 +27,7 @@ function useFormController<
     const result = schema.safeParse(formValues);
     if (result.success) {
       handleSubmit(formValues);
+      setFormValues(init(schema));
     } else {
       setErrors(result.error.format());
     }
