@@ -16,6 +16,7 @@ import { PasswordField } from "~/components/password-field";
 import { TextField } from "~/components/text-field";
 import { auth } from "~/utils/auth.server";
 import { createOnChangeForKey } from "~/utils/create-on-change-for-key";
+import { type Errors } from "~/utils/errors";
 import { commitSession } from "~/utils/sessions.server";
 
 export function useLoginFormValues(): [
@@ -34,11 +35,28 @@ export function Login({
   const setUsername = createOnChangeForKey(onChangeFormValues, "username");
   const setPassword = createOnChangeForKey(onChangeFormValues, "password");
 
+  const [errors, setErrors] = useState<Errors<FormValues>>({});
+
   return (
     <form
       onSubmit={(event) => {
-        onSubmit();
         event.preventDefault();
+
+        const result = formSchema.safeParse(formValues);
+        if (!result.success) {
+          setErrors(
+            Object.fromEntries(
+              Object.entries(result.error.format()).map(([field, errors]) => [
+                field,
+                Array.isArray(errors)
+                  ? errors.join("\n")
+                  : errors._errors.join("\n"),
+              ]),
+            ) as Errors<FormValues>,
+          );
+        }
+
+        onSubmit();
       }}
     >
       <Card>
@@ -51,11 +69,13 @@ export function Login({
           placeholder="Username"
           value={username}
         />
+        {errors.username && <p className="text-red-500">{errors.username}</p>}
         <PasswordField
           onChange={setPassword}
           placeholder="Password"
           value={password}
         />
+        {errors.password && <p className="text-red-500">{errors.password}</p>}
         <Button className="self-end" type="submit">
           Login
         </Button>
@@ -103,8 +123,6 @@ export const login = serverOnly$(
 
 type FormValues = z.infer<typeof formSchema>;
 
-// Will come back and use this for validation.
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const formSchema = z.object({
   password: z.string(),
   username: z
@@ -116,7 +134,7 @@ const formSchema = z.object({
       "Usernames can only contain letters, numbers, and printable characters (!#$%&'*+-/=?^_`{|}~.).",
     )
     .regex(
-      /^(?:[^.]+\.?)*[^.]+$/,
+      /^(?:(?:[^.]+\.?)*[^.]+)?$/,
       "Dots cannot be the first or last character of a username, and cannot appear consecutively.",
     ),
 });
