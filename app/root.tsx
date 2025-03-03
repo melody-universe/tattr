@@ -8,6 +8,7 @@ import {
   Scripts,
   ScrollRestoration,
 } from "react-router";
+import { HoneypotProvider } from "remix-utils/honeypot/react";
 
 import "./app.css";
 
@@ -17,6 +18,7 @@ import {
   NavigationMenu,
   NavigationMenuLink,
 } from "./components/navigation-menu";
+import { honeypot } from "./utils/honeypot.server";
 
 export function Layout({ children }: { children: React.ReactNode }): ReactNode {
   return (
@@ -42,8 +44,16 @@ export function Layout({ children }: { children: React.ReactNode }): ReactNode {
   );
 }
 
-export default function App(): ReactNode {
-  return <Outlet />;
+export default function App({ loaderData }: Route.ComponentProps): ReactNode {
+  return (
+    <HoneypotProvider {...loaderData.honeypotInputProps}>
+      <Outlet />
+    </HoneypotProvider>
+  );
+}
+
+export async function loader() {
+  return { honeypotInputProps: await honeypot.getInputProps() };
 }
 
 export const links: Route.LinksFunction = () => [

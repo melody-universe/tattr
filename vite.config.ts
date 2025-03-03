@@ -28,6 +28,7 @@ export default defineConfig(({ isSsrBuild }) => ({
     noExternal: true,
     optimizeDeps: {
       include: [
+        "@oslojs/crypto",
         "pdf-lib",
         "react",
         "react/jsx-runtime",

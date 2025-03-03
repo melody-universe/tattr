@@ -25,3 +25,10 @@ export const assets = sqliteTable("assets", {
     .notNull()
     .references(() => users.id),
 });
+
+export const guests = sqliteTable("guests", {
+  id: integer().primaryKey({ autoIncrement: true }),
+  email: text().notNull(),
+  isBot: integer().notNull(),
+  name: text().notNull(),
+});

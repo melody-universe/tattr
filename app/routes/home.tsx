@@ -7,6 +7,12 @@ import type { Failure } from "~/utils/types/Fallible";
 import { Button } from "~/components/button";
 import { Card } from "~/components/card";
 import { PageLayout } from "~/components/page-layout";
+import { guests } from "~/database/schema";
+import {
+  Guestbook,
+  guestbook,
+  useGuestbookFormController,
+} from "~/modules/guestbook";
 import { login, Login, useLoginFormController } from "~/modules/login";
 import {
   newInstance,
@@ -47,6 +53,10 @@ export default function Home({
         console.error(error);
       },
     );
+  });
+
+  const guestbookController = useGuestbookFormController(() => {
+    // do nothing
   });
 
   const { isLoggedIn, isNewInstance } = loaderData;
@@ -97,9 +107,25 @@ export default function Home({
               Sign out
             </Button>
           </Card>
+          <Card>
+            <p>These folks have signed the guestbook:</p>
+            <ul className="list-disc pl-4">
+              {loaderData.guests.map((guest, index) => (
+                <li key={index}>
+                  <p>
+                    {guest.name} ({guest.email})
+                  </p>
+                  {guest.isBot === 1 && <p>This guest is a bot.</p>}
+                </li>
+              ))}
+            </ul>
+          </Card>
         </>
       ) : (
-        <Login controller={loginFormController} />
+        <>
+          <Login controller={loginFormController} />
+          <Guestbook controller={guestbookController} />
+        </>
       )}
     </PageLayout>
   );
@@ -112,9 +138,9 @@ export async function action({
   const session = await getSession(request.headers.get("Cookie"));
   const formData = await request.formData();
   const action = formData.get("action");
-  if (typeof action !== "string") {
-    return { error: "An unexpected error occurred.", isSuccess: false };
-  }
+  // if (typeof action !== "string") {
+  //   return { error: "An unexpected error occurred.", isSuccess: false };
+  // }
 
   switch (action) {
     case "login": {
@@ -130,7 +156,8 @@ export async function action({
     case "signOut":
       return await signOut(session);
     default:
-      return { error: "An unexpected error occurred", isSuccess: false };
+      assertIsDefined(guestbook);
+      return await guestbook(context, formData);
   }
 }
 
@@ -143,8 +170,10 @@ async function signOut(session: Session): Promise<Response> {
 export async function loader({ context, request }: Route.LoaderArgs) {
   const session = await getSession(request.headers.get("Cookie"));
   const isNewInstance = await instance(context).isNew();
+  const guestsList = await context.db.select().from(guests);
 
   return {
+    guests: guestsList,
     isLoggedIn: session.has("userId"),
     isNewInstance,
   };
