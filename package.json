@@ -30,7 +30,8 @@
     "silly-password-generator": "^1.0.28",
     "tailwind-merge": "^3.0.1",
     "zod": "^3.24.2",
-    "zod-empty": "^1.3.4"
+    "zod-empty": "^1.3.4",
+    "zodix": "^0.4.4"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20241112.0",

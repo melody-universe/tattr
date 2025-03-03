@@ -2,6 +2,7 @@ import { type ReactNode } from "react";
 import { type AppLoadContext, redirect, type Session } from "react-router";
 import { serverOnly$ } from "vite-env-only/macros";
 import { z } from "zod";
+import { zx } from "zodix";
 
 import type { Failure } from "~/utils/types/Fallible";
 
@@ -21,6 +22,7 @@ const schema = z.object({
   password: z.string(),
   username: z
     .string()
+    .trim()
     .min(3)
     .max(64)
     .regex(
@@ -86,14 +88,11 @@ export const login = serverOnly$(
     session: Session,
     formData: FormData,
   ): Promise<Failure | Response> => {
-    const username = formData.get("username");
-    const password = formData.get("password");
-    if (typeof username !== "string" || typeof password !== "string") {
-      return {
-        error: "Please provide a username and password.",
-        isSuccess: false,
-      };
+    const parseResult = await zx.parseFormSafe(formData, schema);
+    if (!parseResult.success) {
+      return { error: parseResult.error.format(), isSuccess: false };
     }
+    const { password, username } = parseResult.data;
 
     const result = await auth(context).verifyCredentials({
       password,

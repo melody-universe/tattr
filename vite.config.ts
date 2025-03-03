@@ -36,6 +36,7 @@ export default defineConfig(({ isSsrBuild }) => ({
         "react-dom/server",
         "react-router",
         "silly-password-generator",
+        "zodix",
       ],
     },
     resolve: {

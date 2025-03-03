@@ -4,6 +4,7 @@ import { Form } from "radix-ui";
 import { type ReactNode } from "react";
 import { serverOnly$ } from "vite-env-only/macros";
 import { z } from "zod";
+import { zx } from "zodix";
 
 import type { Fallible } from "~/utils/types/Fallible";
 
@@ -20,12 +21,11 @@ import {
   type FormController,
 } from "~/utils/use-form-controller";
 
-// Will come back and use this for validation.
-
 const schema = z.object({
-  email: z.string().email(),
+  email: z.string().trim().email(),
   username: z
     .string()
+    .trim()
     .min(3)
     .max(64)
     .regex(
@@ -33,7 +33,7 @@ const schema = z.object({
       "Usernames can only contain letters, numbers, and printable characters (!#$%&'*+-/=?^_`{|}~.).",
     )
     .regex(
-      /^(?:[^.]+\.?)*[^.]+$/,
+      /^(?:(?:[^.]+\.?)*[^.]+)?$/,
       "Dots cannot be the first or last character of a username, and cannot appear consecutively.",
     ),
 });
@@ -87,7 +87,10 @@ function NewInstanceForm({
             <EmailField onChange={setEmail} required value={email} />
           </Form.Control>
           {errors?.email?._errors.map((error, i) => (
-            <Form.Message className="text-red-500" key={i}>
+            <Form.Message
+              className="block text-red-800 dark:text-red-400"
+              key={i}
+            >
               {error}
             </Form.Message>
           ))}
@@ -98,7 +101,10 @@ function NewInstanceForm({
             <TextField onChange={setUsername} value={username} />
           </Form.Control>
           {errors?.username?._errors.map((error, i) => (
-            <Form.Message className="text-red-500" key={i}>
+            <Form.Message
+              className="block text-red-800 dark:text-red-400"
+              key={i}
+            >
               {error}
             </Form.Message>
           ))}
@@ -120,17 +126,12 @@ export const newInstance = serverOnly$(
     context: AppLoadContext,
     formData: FormData,
   ): Promise<NewInstanceResult> => {
-    let username = formData.get("username");
-    let email = formData.get("email");
-    if (typeof username !== "string" || typeof email !== "string") {
-      return { error: "Email and username are required", isSuccess: false };
+    const parseResult = await zx.parseFormSafe(formData, schema);
+    if (!parseResult.success) {
+      return { error: parseResult.error.format(), isSuccess: false };
     }
 
-    username = username.trim();
-    email = email.trim();
-    if (!username || !email) {
-      return { error: "Email and username are required", isSuccess: false };
-    }
+    const { email, username } = parseResult.data;
 
     try {
       if (!(await instance(context).isNew())) {
