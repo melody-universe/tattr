@@ -1,26 +1,27 @@
 import type { ReactNode } from "react";
 
 import { redirect, useSubmit } from "react-router";
+import { z } from "zod";
+import { zx } from "zodix";
 
-import type { Failure } from "~/utils/types/Fallible";
+import type { Failure, Fallible } from "~/utils/types/Fallible";
 
 import { Button } from "~/components/button";
 import { Card } from "~/components/card";
 import { PageLayout } from "~/components/page-layout";
-import { login, Login, useLoginFormController } from "~/modules/login";
+import { Login, useLoginFormController } from "~/modules/login";
 import {
-  newInstance,
   NewInstance,
-  type NewInstanceResult,
   useNewInstanceFormController,
 } from "~/modules/new-instance";
-import { assertIsDefined } from "~/utils/assert-is-defined";
+import { auth } from "~/utils/auth.server";
 import { instance } from "~/utils/instance.server";
 import {
+  commitSession,
   destroySession,
   getSession,
-  type Session,
 } from "~/utils/sessions.server";
+import { stringifyError } from "~/utils/stringify-error";
 
 import type { Route } from "./+types/home";
 
@@ -32,17 +33,16 @@ export default function Home({
 
   const newInstanceFormController = useNewInstanceFormController(
     (formValues) => {
-      submit(
-        { action: "newInstance", ...formValues },
-        { method: "post" },
-      ).catch((error: unknown) => {
-        console.error(error);
-      });
+      submit({ kind: "newInstance", ...formValues }, { method: "post" }).catch(
+        (error: unknown) => {
+          console.error(error);
+        },
+      );
     },
   );
 
   const loginFormController = useLoginFormController((formValues) => {
-    submit({ action: "login", ...formValues }, { method: "post" }).catch(
+    submit({ kind: "signIn", ...formValues }, { method: "post" }).catch(
       (error: unknown) => {
         console.error(error);
       },
@@ -73,7 +73,7 @@ export default function Home({
             <p>Or if you like, you can reset this instance.</p>
             <Button
               onClick={() => {
-                submit({ action: "resetInstance" }, { method: "post" }).catch(
+                submit({ kind: "resetInstance" }, { method: "post" }).catch(
                   (error: unknown) => {
                     console.error(error);
                   },
@@ -87,7 +87,7 @@ export default function Home({
             <p>Also you can sign out.</p>
             <Button
               onClick={() => {
-                submit({ action: "signOut" }, { method: "post" }).catch(
+                submit({ kind: "signOut" }, { method: "post" }).catch(
                   (error: unknown) => {
                     console.error(error);
                   },
@@ -110,35 +110,79 @@ export async function action({
   request,
 }: Route.ActionArgs): Promise<Failure | NewInstanceResult | Response> {
   const session = await getSession(request.headers.get("Cookie"));
-  const formData = await request.formData();
-  const action = formData.get("action");
-  if (typeof action !== "string") {
-    return { error: "An unexpected error occurred.", isSuccess: false };
-  }
+  const actionData = await zx.parseForm(request, actionSchema);
 
-  switch (action) {
-    case "login": {
-      assertIsDefined(login);
-      return login(context, session, formData);
-    }
+  switch (actionData.kind) {
     case "newInstance":
-      assertIsDefined(newInstance);
-      return newInstance(context, formData);
+      return await newInstance(actionData);
     case "resetInstance":
       await instance(context).reset();
-      return await signOut(session);
+      return await signOut();
+    case "signIn":
+      return await signIn(actionData);
     case "signOut":
-      return await signOut(session);
-    default:
-      return { error: "An unexpected error occurred", isSuccess: false };
+      return await signOut();
+  }
+
+  async function newInstance({
+    email,
+    username,
+  }: z.infer<typeof newInstanceAction>): Promise<NewInstanceResult> {
+    try {
+      if (!(await instance(context).isNew())) {
+        return {
+          error: "A user already exists in this instance.",
+          isSuccess: false,
+        };
+      }
+
+      const result = await auth(context).createUser({ email, username });
+      if (!result.isSuccess) {
+        throw result.error;
+      }
+      return {
+        kind: "newInstance",
+        isSuccess: true,
+        password: result.password,
+      };
+    } catch (error: unknown) {
+      return {
+        error: stringifyError(error),
+        isSuccess: false,
+      };
+    }
+  }
+
+  async function signIn({
+    password,
+    username,
+  }: z.infer<typeof signInAction>): Promise<Failure | Response> {
+    const result = await auth(context).verifyCredentials({
+      password,
+      username,
+    });
+    if (!result.isSuccess) {
+      return result;
+    }
+
+    session.set("userId", result.userId);
+
+    return redirect("/", {
+      headers: { "Set-Cookie": await commitSession(session) },
+    });
+  }
+
+  async function signOut(): Promise<Response> {
+    return redirect("/", {
+      headers: { "Set-Cookie": await destroySession(session) },
+    });
   }
 }
 
-async function signOut(session: Session): Promise<Response> {
-  return redirect("/", {
-    headers: { "Set-Cookie": await destroySession(session) },
-  });
-}
+type NewInstanceResult = Fallible<{
+  kind: "newInstance";
+  password: string;
+}>;
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const session = await getSession(request.headers.get("Cookie"));
@@ -149,3 +193,34 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     isNewInstance,
   };
 }
+
+const zodUsername = z
+  .string()
+  .trim()
+  .min(3)
+  .max(64)
+  .regex(
+    /^[a-zA-Z0-9!#$%&'*+-/=?^_`{|}~.]*$/,
+    "Usernames can only contain letters, numbers, and printable characters (!#$%&'*+-/=?^_`{|}~.).",
+  )
+  .regex(
+    /^(?:(?:[^.]+\.?)*[^.]+)?$/,
+    "Dots cannot be the first or last character of a username, and cannot appear consecutively.",
+  );
+
+const newInstanceAction = z.object({
+  email: z.string().trim().email(),
+  username: zodUsername,
+});
+
+const signInAction = z.object({
+  password: z.string(),
+  username: zodUsername,
+});
+
+const actionSchema = z.discriminatedUnion("kind", [
+  z.object({ kind: z.literal("newInstance") }).merge(newInstanceAction),
+  z.object({ kind: z.literal("resetInstance") }),
+  z.object({ kind: z.literal("signIn") }).merge(signInAction),
+  z.object({ kind: z.literal("signOut") }),
+]);

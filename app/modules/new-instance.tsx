@@ -1,21 +1,12 @@
-import type { AppLoadContext } from "react-router";
-
 import { Form } from "radix-ui";
 import { type ReactNode } from "react";
-import { serverOnly$ } from "vite-env-only/macros";
 import { z } from "zod";
-import { zx } from "zodix";
-
-import type { Fallible } from "~/utils/types/Fallible";
 
 import { Button } from "~/components/button";
 import { Card } from "~/components/card";
 import { EmailField } from "~/components/email-field";
 import { TextField } from "~/components/text-field";
-import { auth } from "~/utils/auth.server";
 import { createOnChangeForKey } from "~/utils/create-on-change-for-key";
-import { instance } from "~/utils/instance.server";
-import { stringifyError } from "~/utils/stringify-error";
 import {
   buildFormControllerHook,
   type FormController,
@@ -56,7 +47,7 @@ export function NewInstance({
   return <NewInstanceForm controller={formController} />;
 }
 
-export type NewInstanceProps = {
+type NewInstanceProps = {
   formController: FormController<typeof schema>;
   password?: string;
 };
@@ -120,46 +111,3 @@ function NewInstanceForm({
 type NewInstanceFormProps = {
   controller: FormController<typeof schema>;
 };
-
-export const newInstance = serverOnly$(
-  async (
-    context: AppLoadContext,
-    formData: FormData,
-  ): Promise<NewInstanceResult> => {
-    const parseResult = await zx.parseFormSafe(formData, schema);
-    if (!parseResult.success) {
-      return { error: parseResult.error.format(), isSuccess: false };
-    }
-
-    const { email, username } = parseResult.data;
-
-    try {
-      if (!(await instance(context).isNew())) {
-        return {
-          error: "A user already exists in this instance.",
-          isSuccess: false,
-        };
-      }
-
-      const result = await auth(context).createUser({ email, username });
-      if (!result.isSuccess) {
-        throw result.error;
-      }
-      return {
-        kind: "newInstance",
-        isSuccess: true,
-        password: result.password,
-      };
-    } catch (error: unknown) {
-      return {
-        error: stringifyError(error),
-        isSuccess: false,
-      };
-    }
-  },
-);
-
-export type NewInstanceResult = Fallible<{
-  kind: "newInstance";
-  password: string;
-}>;

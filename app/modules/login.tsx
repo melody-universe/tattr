@@ -1,18 +1,11 @@
 import { type ReactNode } from "react";
-import { type AppLoadContext, redirect, type Session } from "react-router";
-import { serverOnly$ } from "vite-env-only/macros";
 import { z } from "zod";
-import { zx } from "zodix";
-
-import type { Failure } from "~/utils/types/Fallible";
 
 import { Button } from "~/components/button";
 import { Card } from "~/components/card";
 import { PasswordField } from "~/components/password-field";
 import { TextField } from "~/components/text-field";
-import { auth } from "~/utils/auth.server";
 import { createOnChangeForKey } from "~/utils/create-on-change-for-key";
-import { commitSession } from "~/utils/sessions.server";
 import {
   buildFormControllerHook,
   type FormController,
@@ -81,31 +74,3 @@ export function Login({
 }
 
 type LoginProps = { controller: FormController<typeof schema> };
-
-export const login = serverOnly$(
-  async (
-    context: AppLoadContext,
-    session: Session,
-    formData: FormData,
-  ): Promise<Failure | Response> => {
-    const parseResult = await zx.parseFormSafe(formData, schema);
-    if (!parseResult.success) {
-      return { error: parseResult.error.format(), isSuccess: false };
-    }
-    const { password, username } = parseResult.data;
-
-    const result = await auth(context).verifyCredentials({
-      password,
-      username,
-    });
-    if (!result.isSuccess) {
-      return result;
-    }
-
-    session.set("userId", result.userId);
-
-    return redirect("/", {
-      headers: { "Set-Cookie": await commitSession(session) },
-    });
-  },
-);
