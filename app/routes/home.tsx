@@ -127,7 +127,7 @@ export async function action({
   async function newInstance({
     email,
     username,
-  }: z.infer<typeof newInstanceAction>): Promise<NewInstanceResult> {
+  }: z.infer<typeof newInstanceFormSchema>): Promise<NewInstanceResult> {
     try {
       if (!(await instance(context).isNew())) {
         return {
@@ -156,7 +156,7 @@ export async function action({
   async function signIn({
     password,
     username,
-  }: z.infer<typeof signInAction>): Promise<Failure | Response> {
+  }: z.infer<typeof signInFormSchema>): Promise<Failure | Response> {
     const result = await auth(context).verifyCredentials({
       password,
       username,
@@ -208,19 +208,19 @@ const zodUsername = z
     "Dots cannot be the first or last character of a username, and cannot appear consecutively.",
   );
 
-const newInstanceAction = z.object({
+const newInstanceFormSchema = z.object({
   email: z.string().trim().email(),
   username: zodUsername,
 });
 
-const signInAction = z.object({
+const signInFormSchema = z.object({
   password: z.string(),
   username: zodUsername,
 });
 
 const actionSchema = z.discriminatedUnion("kind", [
-  z.object({ kind: z.literal("newInstance") }).merge(newInstanceAction),
+  z.object({ kind: z.literal("newInstance") }).merge(newInstanceFormSchema),
   z.object({ kind: z.literal("resetInstance") }),
-  z.object({ kind: z.literal("signIn") }).merge(signInAction),
+  z.object({ kind: z.literal("signIn") }).merge(signInFormSchema),
   z.object({ kind: z.literal("signOut") }),
 ]);
