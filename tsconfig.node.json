@@ -3,6 +3,7 @@
   "include": [
     "tailwind.config.ts",
     "vite.config.ts",
+    "vitest.config.ts",
     "database/**/*",
     "load-context.ts",
     "worker-configuration.d.ts"

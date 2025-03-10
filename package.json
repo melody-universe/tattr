@@ -11,6 +11,7 @@
     "dev": "react-router dev",
     "lint": "eslint .",
     "start": "wrangler dev",
+    "test": "vitest",
     "typecheck": "react-router typegen && tsc -b"
   },
   "dependencies": {
@@ -40,6 +41,9 @@
     "@eslint/js": "^9.20.0",
     "@react-router/dev": "^7.1.5",
     "@tailwindcss/vite": "^4.0.0",
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.2.0",
     "@types/node": "^20",
     "@types/react": "^19.0.1",
     "@types/react-dom": "^19.0.1",
@@ -50,6 +54,7 @@
     "eslint-plugin-perfectionist": "^4.9.0",
     "eslint-plugin-prettier": "^5.2.3",
     "eslint-plugin-react": "^7.37.4",
+    "jsdom": "^26.0.0",
     "lefthook": "^1.10.10",
     "prettier": "3.5.1",
     "prettier-plugin-tailwindcss": "^0.6.11",
@@ -59,6 +64,7 @@
     "vite": "^5.4.11",
     "vite-env-only": "^3.0.3",
     "vite-tsconfig-paths": "^5.1.4",
+    "vitest": "^3.0.8",
     "wrangler": "^3.87.0"
   }
 }
