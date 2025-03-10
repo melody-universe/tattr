@@ -31,13 +31,13 @@ export default function Home({
   loaderData,
 }: Route.ComponentProps): ReactNode {
   const signInForm = useRemixForm({
-    defaultValues: { kind: "signIn" },
+    defaultValues: { intent: "signIn" },
     mode: "onSubmit",
     resolver: signInResolver,
   });
 
   const newInstanceForm = useRemixForm({
-    defaultValues: { kind: "newInstance" },
+    defaultValues: { intent: "newInstance" },
     mode: "onSubmit",
     resolver: newInstanceResolver,
   });
@@ -73,7 +73,7 @@ export default function Home({
               // eslint-disable-next-line @typescript-eslint/no-misused-promises
               onSubmit={newInstanceForm.handleSubmit}
             >
-              <Input type="hidden" {...newInstanceForm.register("kind")} />
+              <Input type="hidden" {...newInstanceForm.register("intent")} />
               <Form.Field name="email">
                 <Form.Label>Email</Form.Label>
                 <Form.Control asChild>
@@ -112,7 +112,7 @@ export default function Home({
             <p>Or if you like, you can reset this instance.</p>
             <Button
               onClick={() => {
-                submit({ kind: "resetInstance" }, { method: "post" }).catch(
+                submit({ intent: "resetInstance" }, { method: "post" }).catch(
                   (error: unknown) => {
                     console.error(error);
                   },
@@ -126,7 +126,7 @@ export default function Home({
             <p>Also you can sign out.</p>
             <Button
               onClick={() => {
-                submit({ kind: "signOut" }, { method: "post" }).catch(
+                submit({ intent: "signOut" }, { method: "post" }).catch(
                   (error: unknown) => {
                     console.error(error);
                   },
@@ -141,7 +141,7 @@ export default function Home({
         <Card>
           {/* eslint-disable-next-line @typescript-eslint/no-misused-promises */}
           <ReactRouterForm method="post" onSubmit={signInForm.handleSubmit}>
-            <Input type="hidden" {...signInForm.register("kind")} />
+            <Input type="hidden" {...signInForm.register("intent")} />
             <p>
               You&apos;re free to play around. But if you want to save anything,
               you&apos;ll need to login.
@@ -185,7 +185,7 @@ export async function action({
 
   const session = await getSession(request.headers.get("Cookie"));
 
-  switch (data.kind) {
+  switch (data.intent) {
     case "newInstance":
       return await newInstance(data);
     case "resetInstance":
@@ -214,7 +214,7 @@ export async function action({
         throw result.error;
       }
       return {
-        kind: "newInstance",
+        intent: "newInstance",
         isSuccess: true,
         password: result.password,
       };
@@ -253,7 +253,7 @@ export async function action({
 }
 
 type NewInstanceResult = Fallible<{
-  kind: "newInstance";
+  intent: "newInstance";
   password: string;
 }>;
 
@@ -282,8 +282,8 @@ const zodUsername = z
   );
 
 const newInstanceFormSchema = z.object({
-  kind: z.literal("newInstance"),
   email: z.string().trim().email(),
+  intent: z.literal("newInstance"),
   username: zodUsername,
 });
 
@@ -292,18 +292,18 @@ type NewInstanceFormData = z.infer<typeof newInstanceFormSchema>;
 const newInstanceResolver = zodResolver(newInstanceFormSchema);
 
 const signInFormSchema = z.object({
-  kind: z.literal("signIn"),
+  intent: z.literal("signIn"),
   password: z.string(),
   username: zodUsername,
 });
 
 const signInResolver = zodResolver(signInFormSchema);
 
-const actionSchema = z.discriminatedUnion("kind", [
+const actionSchema = z.discriminatedUnion("intent", [
   newInstanceFormSchema,
-  z.object({ kind: z.literal("resetInstance") }),
+  z.object({ intent: z.literal("resetInstance") }),
   signInFormSchema,
-  z.object({ kind: z.literal("signOut") }),
+  z.object({ intent: z.literal("signOut") }),
 ]);
 
 const actionResolver = zodResolver(actionSchema);
